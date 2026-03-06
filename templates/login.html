@@ -63,20 +63,8 @@ body::after {
 }
 
 /* Fashion model image from Unsplash — editorial dark style */
-.image-panel::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&q=80&fit=crop&crop=center');
-  background-size: cover;
-  background-position: center top;
-  filter: brightness(0.55) contrast(1.1) saturate(0.7);
-  transform: scale(1.04);
-  animation: subtleZoom 18s ease-in-out infinite alternate;
-}
-@keyframes subtleZoom {
-  from { transform: scale(1.04); }
-  to   { transform: scale(1.0); }
-}
+/* slideshow handled by JS */
+.image-panel::before { display: none; }
 
 /* dark gradient over image */
 .image-panel::after {
@@ -455,6 +443,23 @@ body::after {
 }
 
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SLIDESHOW ── */
+.slide-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center top;
+  filter: brightness(0.52) contrast(1.1) saturate(0.65);
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(.4,0,.2,1);
+  animation: subtleZoom 18s ease-in-out infinite alternate;
+}
+.slide-bg.active { opacity: 1; }
+@keyframes subtleZoom {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.0); }
+}
+
 </style>
 </head>
 <body>
@@ -462,7 +467,8 @@ body::after {
 <div class="wrapper">
 
   <!-- ══ LEFT: IMAGE PANEL ══ -->
-  <div class="image-panel">
+  <div class="image-panel" id="imagePanel">
+  <!-- slideshow backgrounds injected by JS -->
     <div class="vert-text">NEON THREAD — WINTER COLLECTION 2025</div>
     <div class="collection-tag">Colección activa</div>
 
@@ -529,14 +535,45 @@ body::after {
 </div>
 
 <script>
-// Slideshow dots — purely decorative, cycles automatically
-const dots = document.querySelectorAll('.img-dot');
-let cur = 0;
-setInterval(() => {
-  dots[cur].classList.remove('active');
-  cur = (cur + 1) % dots.length;
-  dots[cur].classList.add('active');
-}, 3000);
+// ── EDITORIAL FASHION SLIDESHOW ──
+const IMAGES = [
+  'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=900&q=80&fit=crop&crop=center',
+  'https://images.unsplash.com/photo-1550614000-4895a10e1bfd?w=900&q=80&fit=crop&crop=center',
+];
+
+const panel = document.getElementById('imagePanel');
+const dots  = document.querySelectorAll('.img-dot');
+let curSlide = 0;
+
+// Build slide divs
+const slides = IMAGES.map((url, i) => {
+  const div = document.createElement('div');
+  div.className = 'slide-bg' + (i === 0 ? ' active' : '');
+  div.style.backgroundImage = `url('${url}')`;
+  // insert before .image-content
+  panel.insertBefore(div, panel.querySelector('.image-content'));
+  return div;
+});
+
+function goSlide(n) {
+  slides[curSlide].classList.remove('active');
+  dots[curSlide % dots.length].classList.remove('active');
+  curSlide = (n + IMAGES.length) % IMAGES.length;
+  slides[curSlide].classList.add('active');
+  dots[curSlide % dots.length].classList.add('active');
+}
+
+// Auto advance every 4s
+setInterval(() => goSlide(curSlide + 1), 4000);
+
+// Dot clicks
+dots.forEach((d, i) => d.addEventListener('click', () => goSlide(i)));
 
 // Parallax subtle mouse move on image panel
 const imgPanel = document.querySelector('.image-panel');
