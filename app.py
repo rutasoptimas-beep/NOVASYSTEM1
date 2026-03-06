@@ -90,13 +90,18 @@ def registro():
             db.session.add(u)
             db.session.commit()
             login_user(u, remember=True)
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('inicio'))
     return render_template('registro.html', error=error, campos=campos)
+
+@app.route('/inicio')
+@login_required
+def inicio():
+    return render_template('index.html', usuario=current_user)
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', user=current_user)
+    return render_template('dashboard.html', usuario=current_user)
 
 @app.route('/logout')
 @login_required
