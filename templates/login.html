@@ -4,663 +4,559 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>NEON THREAD — Acceso</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Bebas+Neue&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@200;300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --cyan:#00f5d4; --magenta:#ff2d78; --dark:#04070f; --card-bg:rgba(4,10,22,0.88);
+  --red:     #c0392b;
+  --red-dim: #8b2318;
+  --off-white: #e8e4de;
+  --gray:    #9a9590;
+  --dark:    #0e0d0c;
+  --dark2:   #161412;
+  --dark3:   #1e1b18;
+  --border:  rgba(255,255,255,0.07);
 }
-body {
-  min-height:100vh; background:#08162a;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Rajdhani',sans-serif; overflow:hidden; color:white; cursor:none;
+
+html, body {
+  height: 100%;
+  background: var(--dark);
+  color: var(--off-white);
+  font-family: 'Montserrat', sans-serif;
+  overflow: hidden;
 }
 
-/* CURSOR */
-.cursor { position:fixed; width:10px; height:10px; background:var(--cyan); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; transition:width .2s,height .2s; }
-.cursor-ring { position:fixed; width:36px; height:36px; border:1px solid rgba(0,245,212,.55); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:width .15s,height .15s; }
-
-/* CANVAS FULL BG */
-#scene { position:fixed; inset:0; z-index:0; }
-
-/* scanlines on top of everything */
-.scanlines { position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); z-index:3; pointer-events:none; }
-
-/* subtle vignette only on edges */
-.vignette { position:fixed; inset:0; background:radial-gradient(ellipse at center, transparent 30%, rgba(4,10,20,.7) 100%); z-index:2; pointer-events:none; }
+/* ── GRAIN OVERLAY ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 100; opacity: 0.6;
+  animation: grainShift 0.8s steps(2) infinite;
+}
+@keyframes grainShift {
+  0%,100% { transform: translate(0,0); }
+  25%      { transform: translate(-1%,-1%); }
+  75%      { transform: translate(1%,1%); }
+}
 
 /* ── LAYOUT ── */
-.layout {
-  position:relative; z-index:10;
-  display:grid; grid-template-columns:1fr 380px;
-  width:min(980px,96vw); height:600px;
-  animation:fadeUp 1.5s cubic-bezier(.16,1,.3,1) forwards; opacity:0;
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  height: 100vh;
+  animation: revealIn 1.2s cubic-bezier(.16,1,.3,1) both;
 }
-@keyframes fadeUp { from{opacity:0;transform:translateY(36px)} to{opacity:1;transform:translateY(0)} }
-
-/* ── BRAND PANEL ── */
-.brand-panel {
-  background:linear-gradient(150deg,rgba(0,40,80,.45),rgba(4,10,22,.82));
-  border:1px solid rgba(0,245,212,.13); border-right:none;
-  padding:42px 40px 42px 48px;
-  display:flex; flex-direction:column; justify-content:space-between;
-  position:relative; overflow:hidden;
-  backdrop-filter: blur(6px);
+@keyframes revealIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-.brand-panel::before { content:''; position:absolute; top:-80px; right:-80px; width:280px; height:280px; border-radius:50%; background:radial-gradient(circle,rgba(0,200,255,.07),transparent 65%); pointer-events:none; }
-.brand-panel::after  { content:''; position:absolute; bottom:-60px; left:-40px; width:240px; height:240px; border-radius:50%; background:radial-gradient(circle,rgba(0,245,212,.06),transparent 65%); pointer-events:none; }
 
-.v-line { position:absolute; left:26px; top:0; bottom:0; width:1px; background:linear-gradient(to bottom,transparent,rgba(0,245,212,.22) 30%,rgba(0,245,212,.22) 70%,transparent); }
-.temp-badge { position:absolute; top:18px; right:18px; font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px; color:rgba(0,245,212,.5); border:1px solid rgba(0,245,212,.12); padding:4px 10px; }
-.season-tag { font-size:10px; letter-spacing:5px; text-transform:uppercase; color:var(--cyan); display:flex; align-items:center; gap:10px; }
-.season-tag::before { content:''; display:block; width:20px; height:1px; background:var(--cyan); }
+/* ══════════════════════════════════
+   LEFT — EDITORIAL IMAGE PANEL
+══════════════════════════════════ */
+.image-panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--dark2);
+}
 
-/* brand + gallery row */
-.brand-row { display:flex; align-items:flex-start; gap:22px; position:relative; z-index:2; }
-.brand-name { font-family:'Bebas Neue',sans-serif; font-size:68px; line-height:.88; letter-spacing:5px; background:linear-gradient(175deg,#fff 0%,rgba(255,255,255,.42) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.brand-sub  { font-family:'Cormorant Garamond',serif; font-size:13px; font-style:italic; color:rgba(255,255,255,.35); letter-spacing:1.5px; margin-top:8px; }
+/* Fashion model image from Unsplash — editorial dark style */
+.image-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&q=80&fit=crop&crop=center');
+  background-size: cover;
+  background-position: center top;
+  filter: brightness(0.55) contrast(1.1) saturate(0.7);
+  transform: scale(1.04);
+  animation: subtleZoom 18s ease-in-out infinite alternate;
+}
+@keyframes subtleZoom {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.0); }
+}
 
-/* GALLERY */
-.gallery-frame { position:relative; flex-shrink:0; width:155px; height:200px; margin-top:4px; }
-.gallery-frame::before { content:''; position:absolute; inset:-2px; border-radius:6px; background:conic-gradient(from var(--angle,0deg),var(--magenta),var(--cyan),var(--magenta),var(--cyan),var(--magenta)); animation:spinBorder 3s linear infinite; z-index:0; }
-@property --angle { syntax:'<angle>'; initial-value:0deg; inherits:false; }
-@keyframes spinBorder { to{ --angle:360deg; } }
-.gallery-frame::after { content:''; position:absolute; inset:2px; background:#04070f; border-radius:4px; z-index:1; }
-.gallery-frame-glow { position:absolute; inset:-6px; border-radius:10px; box-shadow:0 0 12px 2px rgba(0,245,212,.35),0 0 28px 4px rgba(255,45,120,.2); animation:glowPulse 2s ease-in-out infinite; z-index:0; }
-@keyframes glowPulse { 0%,100%{opacity:.7} 50%{opacity:1} }
-.gallery-counter { position:absolute; bottom:-22px; right:0; font-size:9px; letter-spacing:3px; color:rgba(0,245,212,.45); z-index:5; }
-.gallery-slides { position:absolute; inset:2px; border-radius:4px; overflow:hidden; z-index:2; }
-.gallery-slide { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(4,8,20,1); opacity:0; transition:opacity .55s cubic-bezier(.4,0,.2,1); }
-.gallery-slide.active { opacity:1; }
-.gallery-slide img { width:100%; height:100%; object-fit:cover; object-position:center top; }
-.slide-label { position:absolute; bottom:0; left:0; right:0; padding:6px 8px; background:linear-gradient(to top,rgba(4,8,20,.95),transparent); font-size:8px; letter-spacing:3px; text-transform:uppercase; color:rgba(0,245,212,.7); text-align:center; }
-.gallery-dots { position:absolute; bottom:-36px; left:0; right:0; display:flex; justify-content:center; gap:5px; z-index:5; }
-.dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.15); transition:background .3s,transform .3s; cursor:none; }
-.dot.active { background:var(--cyan); transform:scale(1.3); box-shadow:0 0 6px var(--cyan); }
+/* dark gradient over image */
+.image-panel::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, transparent 60%, var(--dark) 100%),
+    linear-gradient(to top, rgba(10,8,6,.9) 0%, transparent 50%);
+}
 
-.winter-label { display:inline-flex; align-items:center; gap:8px; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.06); padding:6px 12px; margin-bottom:12px; }
-.snow-icon { font-size:12px; animation:spin 8s linear infinite; display:inline-block; }
-@keyframes spin { to{transform:rotate(360deg)} }
-.tagline { font-family:'Cormorant Garamond',serif; font-size:13px; font-style:italic; color:rgba(255,255,255,.22); line-height:1.85; }
+/* content inside image panel */
+.image-content {
+  position: absolute; inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 48px;
+}
 
-/* ── LOGIN PANEL ── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 6px;
+  color: var(--off-white);
+}
+.brand-line {
+  width: 32px; height: 1px;
+  background: var(--red);
+}
+.brand-season {
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+
+.image-headline {
+  position: relative;
+}
+.image-headline h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -1px;
+  color: var(--off-white);
+  margin-bottom: 20px;
+}
+.image-headline h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(232,228,222,0.6);
+}
+.image-headline p {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray);
+  line-height: 1.8;
+  max-width: 320px;
+}
+
+/* vertical text on left edge */
+.vert-text {
+  position: absolute;
+  left: 18px; top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  font-size: 8px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.15);
+  white-space: nowrap;
+}
+
+/* image slideshow dots */
+.img-nav {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.img-dot {
+  width: 20px; height: 1px;
+  background: rgba(255,255,255,0.25);
+  transition: all 0.4s;
+  cursor: pointer;
+}
+.img-dot.active {
+  width: 36px;
+  background: var(--red);
+}
+
+/* ── COLLECTION TAG ── */
+.collection-tag {
+  position: absolute;
+  top: 44px; right: 48px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+.collection-tag::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 2s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ══════════════════════════════════
+   RIGHT — LOGIN PANEL
+══════════════════════════════════ */
 .login-panel {
-  background:var(--card-bg); border:1px solid rgba(0,245,212,.17);
-  padding:48px 44px; display:flex; flex-direction:column; justify-content:center;
-  position:relative; backdrop-filter:blur(28px);
+  background: var(--dark);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 56px;
+  position: relative;
+  overflow: hidden;
 }
-.corner-tl,.corner-br { position:absolute; width:18px; height:18px; }
-.corner-tl { top:-1px; right:-1px; border-top:2px solid var(--magenta); border-right:2px solid var(--magenta); }
-.corner-br { bottom:-1px; left:-1px; border-bottom:2px solid var(--magenta); border-left:2px solid var(--magenta); }
-.scan-line { position:absolute; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--cyan),transparent); opacity:.2; animation:scanMove 5s linear infinite; }
-@keyframes scanMove { 0%{top:0%} 100%{top:100%} }
-.login-kicker { font-size:10px; letter-spacing:5px; text-transform:uppercase; color:rgba(255,255,255,.26); margin-bottom:7px; }
-.login-heading { font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:3px; margin-bottom:32px; }
-.login-heading span { color:var(--cyan); }
-.field { position:relative; margin-bottom:22px; }
-.field label { display:block; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,.26); margin-bottom:8px; transition:color .3s; }
-.field:focus-within label { color:var(--cyan); }
-.field input { width:100%; background:rgba(255,255,255,.03); border:none; border-bottom:1px solid rgba(255,255,255,.1); color:white; font-family:'Rajdhani',sans-serif; font-size:15px; letter-spacing:1px; padding:12px 0; outline:none; transition:border-color .3s; caret-color:var(--cyan); }
-.field input:focus { border-bottom-color:rgba(0,245,212,.4); }
-.field input::placeholder { color:rgba(255,255,255,.12); font-style:italic; font-family:'Cormorant Garamond',serif; font-size:14px; }
-.field-line { position:absolute; bottom:0; left:0; height:1px; width:0; background:var(--cyan); transition:width .4s ease; box-shadow:0 0 8px var(--cyan); }
-.field:focus-within .field-line { width:100%; }
-.btn-login { width:100%; margin-top:28px; padding:16px; background:transparent; border:1px solid var(--cyan); color:var(--cyan); font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:6px; cursor:pointer; position:relative; overflow:hidden; transition:color .4s; }
-.btn-login::before { content:''; position:absolute; inset:0; background:var(--cyan); transform:translateX(-100%); transition:transform .4s cubic-bezier(.16,1,.3,1); z-index:0; }
-.btn-login:hover::before { transform:translateX(0); }
-.btn-login:hover { color:var(--dark); }
-.btn-login span { position:relative; z-index:1; }
-.login-footer { margin-top:24px; display:flex; justify-content:space-between; align-items:center; }
-.login-footer a { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.18); text-decoration:none; transition:color .3s; }
-.login-footer a:hover { color:var(--magenta); }
-.status-dot { width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan); animation:pulse 2s ease infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.7)} }
 
-/* ═══════════════════════════════════
-   RESPONSIVE — TABLET (max 768px)
-═══════════════════════════════════ */
-@media (max-width: 768px) {
-  body { overflow-y: auto; align-items: flex-start; cursor: auto; }
-  .cursor, .cursor-ring { display: none; }
-  .layout {
+/* subtle red accent top-right corner */
+.login-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 120px; height: 2px;
+  background: linear-gradient(to left, var(--red), transparent);
+}
+.login-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 80px; height: 1px;
+  background: linear-gradient(to right, var(--red-dim), transparent);
+}
+
+.login-eyebrow {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.login-eyebrow::before {
+  content: '';
+  display: block;
+  width: 18px; height: 1px;
+  background: var(--red);
+}
+
+.login-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--off-white);
+  margin-bottom: 6px;
+}
+.login-title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gray);
+}
+
+.login-sub {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--gray);
+  margin-bottom: 44px;
+}
+
+/* DIVIDER */
+.divider {
+  width: 32px; height: 1px;
+  background: var(--red);
+  margin-bottom: 44px;
+}
+
+/* FIELDS */
+.field {
+  position: relative;
+  margin-bottom: 32px;
+}
+.field label {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 10px;
+  transition: color 0.3s;
+}
+.field:focus-within label {
+  color: var(--off-white);
+}
+.field input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  color: var(--off-white);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  padding: 10px 0 12px;
+  outline: none;
+  transition: border-color 0.3s;
+  caret-color: var(--red);
+}
+.field input:focus {
+  border-bottom-color: rgba(255,255,255,0.4);
+}
+.field input::placeholder {
+  color: rgba(255,255,255,0.15);
+  font-style: italic;
+  font-weight: 200;
+}
+
+/* animated underline on focus */
+.field-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 1px; width: 0;
+  background: var(--red);
+  transition: width 0.4s cubic-bezier(.16,1,.3,1);
+}
+.field:focus-within .field-bar { width: 100%; }
+
+/* ERROR */
+.alert-error {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  padding: 10px 0 10px 12px;
+  border-left: 2px solid var(--red);
+  margin-bottom: 24px;
+  background: rgba(192,57,43,0.05);
+  animation: fadeUp .3s ease;
+}
+
+/* SUBMIT BUTTON */
+.btn-submit {
+  width: 100%;
+  padding: 17px 0;
+  background: var(--red);
+  border: none;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+  margin-top: 8px;
+}
+.btn-submit::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.15);
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(.16,1,.3,1);
+}
+.btn-submit:hover::before { transform: translateX(0); }
+.btn-submit:hover { background: var(--red-dim); }
+
+/* FOOTER */
+.login-footer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.login-footer a {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.login-footer a:hover { color: var(--off-white); }
+.login-footer span {
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.12);
+}
+
+/* REGISTER LINK */
+.register-cta {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.register-cta p {
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--gray);
+}
+.register-cta a {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--off-white);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: gap 0.3s;
+}
+.register-cta a:hover { gap: 14px; }
+.register-cta a::after { content: '→'; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 820px) {
+  html, body { overflow-y: auto; }
+  .wrapper {
     grid-template-columns: 1fr;
-    width: 100%;
     height: auto;
     min-height: 100vh;
   }
-  .brand-panel {
-    border-right: 1px solid rgba(0,245,212,.13);
-    border-bottom: none;
-    padding: 36px 28px 28px 36px;
-    min-height: 300px;
+  .image-panel {
+    height: 40vh;
+    min-height: 280px;
   }
-  .v-line { left: 14px; }
-  .brand-name { font-size: 52px; }
-  .brand-row { gap: 16px; align-items: center; }
-  .gallery-frame { width: 120px; height: 155px; }
-  .tagline { font-size: 12px; }
-  .login-panel { padding: 36px 28px 40px; }
-  .btn-login { cursor: pointer; }
+  .image-panel::after {
+    background: linear-gradient(to top, rgba(10,8,6,.95) 0%, transparent 60%);
+  }
+  .image-headline h1 { font-size: 36px; }
+  .vert-text { display: none; }
+  .login-panel { padding: 44px 32px 56px; border-left: none; border-top: 1px solid var(--border); }
+  .login-title { font-size: 34px; }
 }
 
-/* ═══════════════════════════════════
-   RESPONSIVE — MÓVIL (max 480px)
-═══════════════════════════════════ */
 @media (max-width: 480px) {
-  body { overflow-y: auto; align-items: flex-start; }
-  .layout { grid-template-columns: 1fr; width: 100%; height: auto; }
-  .brand-panel { padding: 28px 22px 24px 30px; min-height: auto; gap: 18px; }
-  .v-line { left: 12px; }
-  .temp-badge { font-size: 10px; top: 14px; right: 14px; padding: 3px 8px; }
-  .season-tag { font-size: 9px; letter-spacing: 4px; }
-  .brand-row { flex-direction: row; align-items: center; gap: 14px; }
-  .brand-name { font-size: 44px; letter-spacing: 3px; }
-  .brand-sub { font-size: 11px; margin-top: 5px; }
-  .gallery-frame { width: 100px; height: 130px; flex-shrink: 0; }
-  .gallery-frame::before { inset: -1.5px; }
-  .gallery-frame::after  { inset: 1.5px; }
-  .gallery-counter { font-size: 8px; bottom: -18px; }
-  .gallery-dots { bottom: -30px; gap: 4px; }
-  .dot { width: 4px; height: 4px; }
-  .slide-label { font-size: 7px; padding: 4px 6px; }
-  .winter-label { font-size: 8px; letter-spacing: 3px; padding: 5px 10px; margin-bottom: 8px; }
-  .tagline { font-size: 11.5px; line-height: 1.7; }
-  .login-panel { padding: 32px 22px 44px; }
-  .login-kicker { font-size: 9px; letter-spacing: 4px; }
-  .login-heading { font-size: 32px; letter-spacing: 2px; margin-bottom: 26px; }
-  .field { margin-bottom: 18px; }
-  .field label { font-size: 9px; letter-spacing: 3px; }
-  .field input { font-size: 16px; padding: 14px 0; }
-  .btn-login { font-size: 16px; letter-spacing: 4px; padding: 18px; margin-top: 24px; cursor: pointer; }
-  .login-footer { margin-top: 20px; }
-  .login-footer a { font-size: 9px; letter-spacing: 1.5px; }
-  .corner-tl, .corner-br { width: 14px; height: 14px; }
+  .image-panel { height: 35vh; }
+  .image-content { padding: 28px 24px; }
+  .image-headline h1 { font-size: 28px; }
+  .collection-tag { top: 28px; right: 24px; }
+  .login-panel { padding: 36px 24px 48px; }
+  .login-title { font-size: 30px; }
+  .field input { font-size: 16px; }
+  .login-footer { flex-direction: column; gap: 14px; text-align: center; }
+  .register-cta { flex-direction: column; gap: 14px; text-align: center; }
 }
 
-@media (max-width: 360px) {
-  .brand-name { font-size: 38px; }
-  .gallery-frame { width: 88px; height: 115px; }
-  .login-heading { font-size: 28px; }
-}
-
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
 <body>
 
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursorRing"></div>
-<canvas id="scene"></canvas>
-<div class="vignette"></div>
-<div class="scanlines"></div>
+<div class="wrapper">
 
-<div class="layout">
-  <div class="brand-panel">
-    <div class="v-line"></div>
-    <div class="temp-badge">❄ −12°C</div>
-    <div class="season-tag">Invierno 2025</div>
-    <div class="brand-row">
-      <div class="brand-text">
-        <div class="brand-name">NEON<br>THREAD</div>
-        <div class="brand-sub">Winter Collection</div>
+  <!-- ══ LEFT: IMAGE PANEL ══ -->
+  <div class="image-panel">
+    <div class="vert-text">NEON THREAD — WINTER COLLECTION 2025</div>
+    <div class="collection-tag">Colección activa</div>
+
+    <div class="image-content">
+      <div class="brand">
+        <div class="brand-logo">NEON THREAD</div>
+        <div class="brand-line"></div>
+        <div class="brand-season">Invierno 2025</div>
       </div>
-      <div class="gallery-frame" id="galleryFrame">
-        <div class="gallery-frame-glow"></div>
-        <div class="gallery-slides" id="gallerySlides"></div>
-        <div class="gallery-dots" id="galleryDots"></div>
-        <div class="gallery-counter" id="galleryCounter">01 / 08</div>
+
+      <div class="image-headline">
+        <h1>DESIGN<br><em>&amp; Freedom</em></h1>
+        <p>Ropa de invierno para quienes<br>se niegan a pasar desapercibidos.</p>
+        <div style="margin-top:28px;">
+          <div class="img-nav" id="imgNav">
+            <div class="img-dot active"></div>
+            <div class="img-dot"></div>
+            <div class="img-dot"></div>
+            <div class="img-dot"></div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="winter-label"><span class="snow-icon">✦</span> Colección Exclusiva</div>
-      <div class="tagline">El frío nunca se vistió<br>tan bien.<br><em>Tu guardarropa del futuro.</em></div>
     </div>
   </div>
 
+  <!-- ══ RIGHT: LOGIN PANEL ══ -->
   <div class="login-panel">
-    <div class="corner-tl"></div>
-    <div class="corner-br"></div>
-    <div class="scan-line"></div>
-    <div class="login-kicker">// Acceso miembros</div>
-    <div class="login-heading">INICIAR <span>SESIÓN</span></div>
+
+    <div class="login-eyebrow">Acceso exclusivo</div>
+    <h2 class="login-title">Bienvenido<br><em>de vuelta.</em></h2>
+    <div class="divider"></div>
+
+    {% if error %}
+    <div class="alert-error">⚠ {{ error }}</div>
+    {% endif %}
+
     <form method="POST" action="/">
       <div class="field">
         <label>Usuario</label>
-        <input type="text" name="username" placeholder="Tu usuario" autocomplete="off" required>
-        <div class="field-line"></div>
+        <input type="text" name="username" placeholder="Tu nombre de usuario" autocomplete="off" required>
+        <div class="field-bar"></div>
       </div>
+
       <div class="field">
         <label>Contraseña</label>
         <input type="password" name="password" placeholder="••••••••" required>
-        <div class="field-line"></div>
+        <div class="field-bar"></div>
       </div>
-      {% if error %}<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding:10px 14px;border-left:2px solid #ff2d78;color:#ff2d78;background:rgba(255,45,120,.07)">⚠ {{ error }}</div>{% endif %}<button type="submit" class="btn-login"><span>ACCEDER →</span></button>
+
+      <button type="submit" class="btn-submit">Iniciar sesión</button>
     </form>
+
     <div class="login-footer">
-      <a href="#">¿Olvidaste tu acceso?</a>
-      <div class="status-dot"></div>
-      <a href="/registro">Registrarte</a>
+      <a href="#">¿Olvidaste tu contraseña?</a>
+      <span>© 2025 NEON THREAD</span>
     </div>
+
+    <div class="register-cta">
+      <p>¿Aún no tienes cuenta?</p>
+      <a href="/registro">Regístrate</a>
+    </div>
+
   </div>
 </div>
 
 <script>
-// ─── CURSOR ───────────────────────────────────────
-const cursor=document.getElementById('cursor'), ring=document.getElementById('cursorRing');
-let rx=0,ry=0,mx=window.innerWidth/2,my=window.innerHeight/2;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
-(function tr(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tr);})();
-// Hide cursor on touch devices
-if ('ontouchstart' in window) {
-  document.getElementById('cursor').style.display = 'none';
-  document.getElementById('cursorRing').style.display = 'none';
-  document.body.style.cursor = 'auto';
-}
-document.querySelectorAll('button,a,input').forEach(el=>{
-  el.addEventListener('mouseenter',()=>{cursor.style.width='18px';cursor.style.height='18px';ring.style.width='54px';ring.style.height='54px';});
-  el.addEventListener('mouseleave',()=>{cursor.style.width='10px';cursor.style.height='10px';ring.style.width='36px';ring.style.height='36px';});
+// Slideshow dots — purely decorative, cycles automatically
+const dots = document.querySelectorAll('.img-dot');
+let cur = 0;
+setInterval(() => {
+  dots[cur].classList.remove('active');
+  cur = (cur + 1) % dots.length;
+  dots[cur].classList.add('active');
+}, 3000);
+
+// Parallax subtle mouse move on image panel
+const imgPanel = document.querySelector('.image-panel');
+document.addEventListener('mousemove', e => {
+  if (window.innerWidth < 820) return;
+  const x = (e.clientX / window.innerWidth - 0.5) * 8;
+  const y = (e.clientY / window.innerHeight - 0.5) * 6;
+  if (imgPanel) imgPanel.style.backgroundPosition = `calc(center + ${x}px) calc(top + ${y}px)`;
 });
 
-// ─── CANVAS LANDSCAPE ─────────────────────────────
-const canvas=document.getElementById('scene'), ctx=canvas.getContext('2d');
-let W,H;
-function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
-resize(); window.addEventListener('resize',resize);
-
-// TIME — drives everything. Full cycle = 60s
-let T = 0; // 0..1 = night→day→dusk cycle
-
-// ── STARS ──
-const STARS = Array.from({length:220},()=>({
-  x:Math.random(), y:Math.random()*.55,
-  r:Math.random()*1.5+.3, ph:Math.random()*Math.PI*2,
-  twinkle:Math.random()*.6+.4
-}));
-
-// ── CLOUDS ──
-const CLOUDS = Array.from({length:7},()=>({
-  x:Math.random()*1.4-.2, y:.08+Math.random()*.18,
-  w:.18+Math.random()*.16, h:.045+Math.random()*.03,
-  sp:.00008+Math.random()*.00012
-}));
-
-// ── SNOWFLAKES ──
-const SNOW = Array.from({length:180},()=>({
-  x:Math.random(), y:Math.random(),
-  r:Math.random()*2+.4, sp:.0003+Math.random()*.0006,
-  sw:(Math.random()-.5)*.0002, op:Math.random()*.4+.1,
-  big:Math.random()>.88, ph:Math.random()*Math.PI*2
-}));
-
-function lerp(a,b,t){ return a+(b-a)*t; }
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-
-// Sky color stops at different times
-// t=0 deep night, t=.35 dawn/sunrise, t=.5 golden day, t=.75 dusk, t=1 night again
-function skyColor(t){
-  // night
-  const night  = { top:[4,12,35],   bot:[8,20,55]  };
-  // dawn
-  const dawn   = { top:[20,30,70],  bot:[180,100,60]};
-  // day
-  const day    = { top:[30,100,190],bot:[120,200,240]};
-  // dusk
-  const dusk   = { top:[20,25,60],  bot:[200,80,40] };
-
-  let A,B,f;
-  if(t<.3){       A=night; B=dawn;  f=t/.3;        }
-  else if(t<.5){  A=dawn;  B=day;   f=(t-.3)/.2;   }
-  else if(t<.72){ A=day;   B=dusk;  f=(t-.5)/.22;  }
-  else{           A=dusk;  B=night; f=(t-.72)/.28;  }
-
-  function mix(a,b,f){ return a.map((v,i)=>Math.round(lerp(v,b[i],f))); }
-  const top=mix(A.top,B.top,f), bot=mix(A.bot,B.bot,f);
-  return {top,bot};
-}
-
-function drawSky(){
-  const col = skyColor(T);
-  const grad = ctx.createLinearGradient(0,0,0,H*.75);
-  const rgb = (c)=>`rgb(${c[0]},${c[1]},${c[2]})`;
-  grad.addColorStop(0, rgb(col.top));
-  grad.addColorStop(1, rgb(col.bot));
-  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
-}
-
-// ── SUN ──
-function drawSun(){
-  // sun travels an arc: rises left, sets right
-  // angle: T=.28 below horizon → T=.36 rising → T=.5 peak → T=.72 setting
-  const sunT = clamp((T-.28)/.44, 0, 1); // 0=horizon left, 1=horizon right
-  const angle = Math.PI - sunT*Math.PI;   // PI = left horizon, 0 = right horizon
-  const cx = W*.5 + Math.cos(angle)*W*.4;
-  const cy = H*.42 - Math.sin(angle)*H*.32;
-
-  const alpha = clamp((T-.3)/.1,0,1) * clamp((.72-T)/.08,0,1);
-  if(alpha<=0) return;
-
-  ctx.save(); ctx.globalAlpha=alpha;
-
-  // outer glow rays
-  const rayCount=16, rayLen=80+Math.sin(T*Math.PI*2)*15;
-  for(let i=0;i<rayCount;i++){
-    const a = (i/rayCount)*Math.PI*2 + T*2;
-    const grd=ctx.createLinearGradient(cx,cy,cx+Math.cos(a)*rayLen,cy+Math.sin(a)*rayLen);
-    grd.addColorStop(0,'rgba(255,220,80,.25)');
-    grd.addColorStop(1,'rgba(255,180,40,0)');
-    ctx.beginPath(); ctx.moveTo(cx,cy);
-    ctx.lineTo(cx+Math.cos(a)*rayLen, cy+Math.sin(a)*rayLen);
-    ctx.strokeStyle=grd; ctx.lineWidth=2.5; ctx.stroke();
-  }
-
-  // halo
-  const halo=ctx.createRadialGradient(cx,cy,0,cx,cy,120);
-  halo.addColorStop(0,'rgba(255,230,100,.35)');
-  halo.addColorStop(.4,'rgba(255,160,50,.12)');
-  halo.addColorStop(1,'rgba(255,120,20,0)');
-  ctx.fillStyle=halo; ctx.beginPath(); ctx.arc(cx,cy,120,0,Math.PI*2); ctx.fill();
-
-  // sun disc
-  const sunGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,28);
-  sunGrad.addColorStop(0,'rgba(255,255,220,1)');
-  sunGrad.addColorStop(.5,'rgba(255,230,100,1)');
-  sunGrad.addColorStop(1,'rgba(255,180,50,.9)');
-  ctx.fillStyle=sunGrad; ctx.beginPath(); ctx.arc(cx,cy,28,0,Math.PI*2); ctx.fill();
-
-  // lens flare spike
-  ctx.strokeStyle='rgba(255,255,200,.6)'; ctx.lineWidth=1.5;
-  [[0,1],[1,0],[.7,.7],[-.7,.7]].forEach(([dx,dy])=>{
-    ctx.beginPath(); ctx.moveTo(cx-dx*60,cy-dy*60); ctx.lineTo(cx+dx*60,cy+dy*60); ctx.stroke();
-  });
-
-  ctx.restore();
-}
-
-// ── MOON ──
-function drawMoon(){
-  // moon visible when T<.3 or T>.65
-  let alpha;
-  if(T<.28)      alpha = 1;
-  else if(T<.38) alpha = clamp(1-(T-.28)/.1,0,1);
-  else if(T<.65) alpha = 0;
-  else if(T<.72) alpha = clamp((T-.65)/.07,0,1);
-  else           alpha = 1;
-  if(alpha<=0) return;
-
-  // moon arc opposite to sun — slow gentle movement
-  const moonAngle = T*Math.PI*1.1 + Math.PI*.55;
-  const mx2 = W*.5 + Math.cos(moonAngle)*W*.38;
-  const my2 = H*.36 - Math.sin(moonAngle)*H*.28;
-
-  ctx.save(); ctx.globalAlpha=alpha;
-
-  // glow
-  const mg=ctx.createRadialGradient(mx2,my2,0,mx2,my2,70);
-  mg.addColorStop(0,'rgba(180,220,255,.25)');
-  mg.addColorStop(1,'rgba(100,160,230,0)');
-  ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(mx2,my2,70,0,Math.PI*2); ctx.fill();
-
-  // moon disc
-  ctx.fillStyle='rgba(220,235,255,.95)';
-  ctx.beginPath(); ctx.arc(mx2,my2,20,0,Math.PI*2); ctx.fill();
-
-  // crescent shadow
-  ctx.fillStyle='rgba(8,18,50,.7)';
-  ctx.beginPath(); ctx.arc(mx2+8,my2-4,16,0,Math.PI*2); ctx.fill();
-
-  ctx.restore();
-}
-
-// ── STARS ──
-function drawStars(){
-  const alpha = T<.3 ? 1 : T<.45 ? clamp(1-(T-.3)/.15,0,1) : T>.68 ? clamp((T-.68)/.12,0,1) : 0;
-  if(alpha<=0) return;
-  ctx.save(); ctx.globalAlpha=alpha;
-  STARS.forEach(s=>{
-    s.ph+=.008;
-    const op = s.twinkle*(.65+.35*Math.sin(s.ph));
-    ctx.beginPath(); ctx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
-    ctx.fillStyle=`rgba(255,255,255,${op})`; ctx.fill();
-  });
-  ctx.restore();
-}
-
-// ── CLOUDS ──
-function drawClouds(){
-  CLOUDS.forEach(c=>{
-    c.x=(c.x+c.sp)%1.4;
-    const alpha = clamp((T-.3)/.15,0,1)*clamp((.85-T)/.1,0,1)*.55+.1;
-    ctx.save(); ctx.globalAlpha=alpha;
-    const cx=c.x*W, cy=c.y*H, cw=c.w*W, ch=c.h*H;
-    const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,cw*.5);
-    cg.addColorStop(0,'rgba(255,255,255,.85)');
-    cg.addColorStop(.6,'rgba(200,225,255,.5)');
-    cg.addColorStop(1,'rgba(180,210,255,0)');
-    // puff shapes
-    [[0,0,1],[-.3,.1,.7],[.35,.08,.75],[-.15,-.12,.55],[.2,-.1,.6]].forEach(([dx,dy,sc])=>{
-      ctx.beginPath();
-      ctx.ellipse(cx+dx*cw, cy+dy*ch, cw*sc*.5, ch*sc, 0, 0, Math.PI*2);
-      ctx.fillStyle=cg; ctx.fill();
-    });
-    ctx.restore();
-  });
-}
-
-// ── MOUNTAINS ──
-// 4 layers of mountains with parallax drift
-function mountainPath(ctx, pts, W, H){
-  ctx.beginPath();
-  ctx.moveTo(0, H);
-  pts.forEach(([xr,yr])=>ctx.lineTo(xr*W, yr*H));
-  ctx.lineTo(W, H);
-  ctx.closePath();
-}
-
-// gentle horizontal parallax offset driven by T
-function parallax(speed){ return Math.sin(T*Math.PI*2)*W*speed; }
-
-function drawMountains(){
-  // Layer 4 — farthest, lightest
-  ctx.save();
-  ctx.translate(parallax(.004),0);
-  const col4 = skyColor(T);
-  // blend with sky color slightly
-  mountainPath(ctx,[
-    [-.05,.72],[.08,.52],[.18,.60],[.28,.45],[.38,.58],[.5,.4],[.62,.55],[.72,.42],[.82,.58],[.95,.5],[1.05,.68]
-  ],W,H);
-  const g4=ctx.createLinearGradient(0,H*.4,0,H*.75);
-  g4.addColorStop(0,`rgba(${col4.top.map(v=>Math.min(255,v+60)).join(',')},0.35)`);
-  g4.addColorStop(1,`rgba(${col4.top.map(v=>Math.max(0,v-10)).join(',')},0.55)`);
-  ctx.fillStyle=g4; ctx.fill();
-  ctx.restore();
-
-  // Layer 3 — snow-capped distant peaks
-  ctx.save();
-  ctx.translate(parallax(.007),0);
-  const pts3=[
-    [-.05,.82],[.05,.65],[.15,.72],[.22,.50],[.32,.68],[.42,.42],[.5,.35],[.58,.44],[.68,.58],[.76,.45],[.85,.62],[.95,.55],[1.05,.75]
-  ];
-  mountainPath(ctx,pts3,W,H);
-  const g3=ctx.createLinearGradient(0,H*.3,0,H*.78);
-  g3.addColorStop(0,'rgba(80,120,180,.7)');
-  g3.addColorStop(.5,'rgba(50,85,140,.85)');
-  g3.addColorStop(1,'rgba(20,40,90,.9)');
-  ctx.fillStyle=g3; ctx.fill();
-
-  // snow on peaks
-  const snowPeaks=[[.22,.50],[.42,.42],[.5,.35],[.58,.44],[.76,.45]];
-  snowPeaks.forEach(([xr,yr])=>{
-    const px=xr*W+parallax(.007), py=yr*H;
-    const sg=ctx.createRadialGradient(px,py,0,px,py,W*.06);
-    sg.addColorStop(0,'rgba(220,240,255,.95)');
-    sg.addColorStop(.4,'rgba(200,225,255,.6)');
-    sg.addColorStop(1,'rgba(150,190,240,0)');
-    ctx.beginPath();
-    ctx.moveTo(px-W*.04,py+H*.05);
-    ctx.lineTo(px,py-H*.018);
-    ctx.lineTo(px+W*.04,py+H*.05);
-    ctx.fillStyle=sg; ctx.fill();
-  });
-  ctx.restore();
-
-  // Layer 2 — mid mountains, darker
-  ctx.save();
-  ctx.translate(parallax(.012),0);
-  mountainPath(ctx,[
-    [-.05,.9],[.08,.75],[.18,.80],[.28,.62],[.38,.76],[.48,.55],[.6,.65],[.7,.52],[.8,.68],[.9,.60],[1.05,.82]
-  ],W,H);
-  const g2=ctx.createLinearGradient(0,H*.5,0,H*.9);
-  g2.addColorStop(0,'rgba(20,55,110,.9)');
-  g2.addColorStop(1,'rgba(8,25,60,1)');
-  ctx.fillStyle=g2; ctx.fill();
-  ctx.restore();
-
-  // Layer 1 — foreground dark hills
-  ctx.save();
-  ctx.translate(parallax(.018),0);
-  mountainPath(ctx,[
-    [-.05,1],[.1,.88],[.25,.92],[.4,.82],[.55,.88],[.7,.80],[.85,.88],[1.05,.92]
-  ],W,H);
-  const g1=ctx.createLinearGradient(0,H*.78,0,H);
-  g1.addColorStop(0,'rgba(5,18,45,.95)');
-  g1.addColorStop(1,'rgba(2,8,22,1)');
-  ctx.fillStyle=g1; ctx.fill();
-  ctx.restore();
-}
-
-// ── WATER / RIVER at bottom ──
-function drawWater(){
-  ctx.save();
-  const wy=H*.86, wh=H*.08;
-  const wg=ctx.createLinearGradient(0,wy,0,wy+wh);
-  wg.addColorStop(0,'rgba(20,80,160,.45)');
-  wg.addColorStop(1,'rgba(5,20,60,.25)');
-  ctx.fillStyle=wg;
-  ctx.beginPath(); ctx.ellipse(W*.5,wy+wh*.5,W*.32,wh*.5,0,0,Math.PI*2); ctx.fill();
-  // shimmer lines on water
-  const shimmerAlpha = .12 + Math.sin(Date.now()*.001)*0.05;
-  ctx.strokeStyle=`rgba(100,200,255,${shimmerAlpha})`; ctx.lineWidth=1;
-  for(let i=0;i<5;i++){
-    const wx=W*.38+i*W*.06, wlen=W*.015+Math.sin(Date.now()*.002+i)*W*.01;
-    ctx.beginPath(); ctx.moveTo(wx,wy+wh*.3+i*3); ctx.lineTo(wx+wlen,wy+wh*.3+i*3); ctx.stroke();
-  }
-  ctx.restore();
-}
-
-// ── TREES (foreground silhouette) ──
-function drawTrees(){
-  const treeData=[
-    // [xRatio, yBaseRatio, height, width]  — two groups left + right
-    [.01,.96,.18,.022],[.05,.97,.22,.026],[.09,.98,.16,.020],[.13,.97,.20,.024],[.17,.99,.14,.018],
-    [.82,.97,.20,.024],[.86,.98,.17,.021],[.90,.97,.23,.027],[.94,.98,.15,.019],[.98,.99,.18,.022],
-  ];
-  ctx.save();
-  treeData.forEach(([xr,yr,hr,wr])=>{
-    const tx=xr*W, ty=yr*H, th=hr*H, tw=wr*W;
-    // trunk
-    ctx.fillStyle='rgba(5,12,30,.95)';
-    ctx.fillRect(tx-tw*.1,ty-th*.15,tw*.2,th*.18);
-    // layers of pine branches (3 tiers)
-    for(let t=0;t<4;t++){
-      const frac=1-t*.22;
-      const by=ty-th*(.18+t*.2);
-      const bw=tw*(1.2-t*.2)*frac;
-      const bh=th*.22;
-      ctx.beginPath();
-      ctx.moveTo(tx,by-bh);
-      ctx.lineTo(tx-bw,by);
-      ctx.lineTo(tx+bw,by);
-      ctx.closePath();
-      ctx.fillStyle=`rgba(${10+t*4},${30+t*12},${50+t*15},.95)`;
-      ctx.fill();
-    }
-  });
-  ctx.restore();
-}
-
-// ── SNOWFALL ──
-function drawSnow(){
-  SNOW.forEach(s=>{
-    s.y=(s.y+s.sp)%1; s.x=(s.x+s.sw+Math.sin(T*80+s.ph)*.0001+1)%1;
-    if(s.big&&s.r>1.8){
-      // small crystal
-      ctx.save(); ctx.translate(s.x*W,s.y*H);
-      ctx.strokeStyle=`rgba(210,240,255,${s.op*.6})`; ctx.lineWidth=.6;
-      for(let i=0;i<6;i++){ctx.rotate(Math.PI/3);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,s.r*3);ctx.stroke();}
-      ctx.restore();
-    } else {
-      ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(215,238,255,${s.op})`; ctx.fill();
-    }
-  });
-}
-
-// ── GRID OVERLAY ──
-function drawGrid(){
-  ctx.strokeStyle='rgba(0,245,212,.018)'; ctx.lineWidth=1;
-  const gs=60, off=(Date.now()*.003)%gs;
-  for(let x=0;x<W+gs;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=-off;y<H+gs;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-}
-
-// MAIN LOOP
-function loop(){
-  T = (T + .0008) % 1; // full day/night cycle every ~20s
-  ctx.clearRect(0,0,W,H);
-  drawSky();
-  drawStars();
-  drawMoon();
-  drawSun();
-  drawClouds();
-  drawMountains();
-  drawWater();
-  drawTrees();
-  drawSnow();
-  drawGrid();
-  requestAnimationFrame(loop);
-}
-loop();
-
-// ─── GALLERY ──────────────────────────────────────────
-const SLIDES=[
-  {url:'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Abrigo Oversize'},
-  {url:'https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Puffer Jacket'},
-  {url:'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Suéter Tejido'},
-  {url:'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Bufanda & Look'},
-  {url:'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Editorial Look'},
-  {url:'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Chamarra Dark'},
-  {url:'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Winter Style'},
-  {url:'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=320&h=420&fit=crop&crop=center&fm=webp&q=85',label:'Cozy Collection'},
-];
-const slidesC=document.getElementById('gallerySlides');
-const dotsC=document.getElementById('galleryDots');
-const counterEl=document.getElementById('galleryCounter');
-SLIDES.forEach((s,i)=>{
-  const slide=document.createElement('div');
-  slide.className='gallery-slide'+(i===0?' active':'');
-  slide.innerHTML=`<img src="${s.url}" alt="${s.label}" loading="${i<2?'eager':'lazy'}"><div class="slide-label">${s.label}</div>`;
-  slidesC.appendChild(slide);
-  const dot=document.createElement('div');
-  dot.className='dot'+(i===0?' active':'');
-  dot.addEventListener('click',()=>goTo(i));
-  dotsC.appendChild(dot);
+// Stagger field animations on load
+document.querySelectorAll('.field, .btn-submit, .login-footer, .register-cta, .login-eyebrow, .login-title, .divider').forEach((el, i) => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(18px)';
+  el.style.transition = `opacity 0.7s ease ${0.2 + i * 0.08}s, transform 0.7s ease ${0.2 + i * 0.08}s`;
+  setTimeout(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  }, 50);
 });
-const slideEls=slidesC.querySelectorAll('.gallery-slide');
-const dotEls=dotsC.querySelectorAll('.dot');
-let current=0,busy=false;
-function goTo(n){
-  if(busy||n===current)return; busy=true;
-  slideEls[current].classList.remove('active'); dotEls[current].classList.remove('active');
-  current=(n+SLIDES.length)%SLIDES.length;
-  slideEls[current].classList.add('active'); dotEls[current].classList.add('active');
-  counterEl.textContent=String(current+1).padStart(2,'0')+' / '+String(SLIDES.length).padStart(2,'0');
-  setTimeout(()=>busy=false,620);
-}
-setInterval(()=>goTo(current+1),2500);
-
-// ─── GLITCH ────────────────────────────────────────────
-const bn=document.querySelector('.brand-name');
-function glitch(){bn.style.textShadow='3px 0 #ff2d78,-3px 0 #00f5d4';setTimeout(()=>{bn.style.textShadow='';setTimeout(glitch,3000+Math.random()*5000);},60+Math.random()*100);}
-setTimeout(glitch,2000);
 </script>
 </body>
 </html>
