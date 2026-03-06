@@ -233,12 +233,12 @@ body {
         <input type="password" name="password" placeholder="••••••••" required>
         <div class="field-line"></div>
       </div>
-      <button type="submit" class="btn-login"><span>ACCEDER →</span></button>
+      {% if error %}<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding:10px 14px;border-left:2px solid #ff2d78;color:#ff2d78;background:rgba(255,45,120,.07)">⚠ {{ error }}</div>{% endif %}<button type="submit" class="btn-login"><span>ACCEDER →</span></button>
     </form>
     <div class="login-footer">
       <a href="#">¿Olvidaste tu acceso?</a>
       <div class="status-dot"></div>
-      <a href="#">Registrarte</a>
+      <a href="/registro">Registrarte</a>
     </div>
   </div>
 </div>
