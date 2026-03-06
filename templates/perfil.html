@@ -103,7 +103,7 @@
           </div>
           <div style="text-align:center;">
             <div class="order-status"><div class="order-status-dot"></div>Confirmado</div>
-            <div style="font-size:9px;letter-spacing:1px;color:var(--tan);margin-top:2px;">{{ p.items|length }} artículo{% if p.items|length != 1 %}s{% endif %}</div>
+            <div style="font-size:9px;letter-spacing:1px;color:var(--tan);margin-top:2px;">{{ p.items|count }} artículo{% if p.items|length != 1 %}s{% endif %}</div>
           </div>
           <div style="text-align:right;">
             <div class="order-total">${{ "{:,.0f}".format(p.total) }}</div>
