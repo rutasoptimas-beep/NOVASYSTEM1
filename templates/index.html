@@ -1,529 +1,223 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEON THREAD — Colección Invierno 2025</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Montserrat:wght@200;300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block extra_head %}
 <style>
-*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-:root {
-  --cream:  #f0ebe3;
-  --beige:  #e0d8cc;
-  --tan:    #c8bfb0;
-  --brown:  #5c4f42;
-  --dark:   #1a1612;
-  --red:    #c0392b;
-  --white:  #faf8f5;
-}
-html { scroll-behavior: smooth; }
-body { background:var(--cream); color:var(--dark); font-family:'Montserrat',sans-serif; overflow-x:hidden; }
+/* HERO */
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 76px);overflow:hidden;}
+.hero-left{display:flex;flex-direction:column;justify-content:center;padding:80px 52px;position:relative;}
+.hero-eyebrow{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--brown);margin-bottom:22px;display:flex;align-items:center;gap:12px;}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--red);}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(52px,5.5vw,82px);font-weight:700;line-height:.93;letter-spacing:-2px;color:var(--dark);margin-bottom:22px;}
+.hero-h1 em{font-style:italic;font-weight:400;color:var(--brown);display:block;}
+.hero-desc{font-size:12px;font-weight:300;line-height:1.9;color:var(--brown);max-width:360px;margin-bottom:40px;}
+.hero-cta{display:flex;align-items:center;gap:22px;}
+.hero-btn-sec{font-size:9px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--brown);text-decoration:none;display:flex;align-items:center;gap:8px;transition:gap .3s,color .3s;}
+.hero-btn-sec:hover{gap:14px;color:var(--dark);}
+.hero-btn-sec::after{content:'→';}
+.hero-stats{display:flex;gap:36px;margin-top:52px;padding-top:28px;border-top:1px solid var(--border);}
+.stat-n{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--dark);line-height:1;}
+.stat-n span{color:var(--red);}
+.stat-l{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--brown);margin-top:3px;}
+.hero-right{position:relative;overflow:hidden;}
+.hero-img-wrap{width:100%;height:100%;position:relative;}
+.hero-img-wrap img{width:100%;height:100%;object-fit:cover;object-position:center top;animation:hzoom 18s ease-in-out infinite alternate;}
+@keyframes hzoom{from{transform:scale(1.04)}to{transform:scale(1.0)}}
+.hero-img-overlay{position:absolute;inset:0;background:linear-gradient(to right,var(--cream) 0%,transparent 12%,transparent 88%,var(--cream) 100%),linear-gradient(to bottom,var(--cream) 0%,transparent 8%);}
 
-/* ══════════════════════════════════
-   NAVBAR
-══════════════════════════════════ */
-nav {
-  position:fixed; top:0; left:0; right:0; z-index:999;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:22px 52px;
-  background:rgba(240,235,227,0.92);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(92,79,66,0.1);
-  transition:padding .4s;
-}
-nav.scrolled { padding:14px 52px; }
+/* TICKER */
+.ticker{overflow:hidden;white-space:nowrap;background:var(--dark);padding:12px 0;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
+.ticker-inner{display:inline-flex;animation:ticker 25s linear infinite;}
+.ticker-item{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--tan);padding:0 40px;}
+.ticker-dot{color:var(--red);margin:0 8px;}
 
-.nav-logo {
-  display:flex; align-items:center; gap:14px;
-}
-.logo-box {
-  width:44px; height:44px;
-  border:1px solid var(--dark);
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Playfair Display',serif; font-size:11px; font-weight:600;
-  letter-spacing:1px; color:var(--dark);
-  transition:background .3s, color .3s;
-}
-.logo-box:hover { background:var(--dark); color:var(--cream); }
-.logo-name { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:5px; color:var(--dark); }
+/* FEATURES */
+.features{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.feat-item{padding:32px;border-right:1px solid var(--border);}
+.feat-item:last-child{border-right:none;}
+.feat-title{font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--dark);margin-bottom:8px;}
+.feat-desc{font-size:11px;font-weight:300;line-height:1.7;color:var(--brown);}
 
-.nav-links { display:flex; gap:36px; align-items:center; }
-.nav-links a { font-size:9px; font-weight:500; letter-spacing:4px; text-transform:uppercase; color:var(--brown); text-decoration:none; transition:color .3s; position:relative; }
-.nav-links a::after { content:''; position:absolute; bottom:-3px; left:0; width:0; height:1px; background:var(--red); transition:width .3s; }
-.nav-links a:hover { color:var(--dark); }
-.nav-links a:hover::after { width:100%; }
+/* SECTION */
+.section{padding:80px 48px;}
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:44px;}
+.see-all{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--brown);text-decoration:none;display:flex;align-items:center;gap:8px;transition:gap .3s,color .3s;}
+.see-all:hover{gap:14px;color:var(--dark);}
+.see-all::after{content:'→';}
 
-.nav-actions { display:flex; align-items:center; gap:20px; }
-.nav-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--brown); font-size:16px; transition:color .3s; }
-.nav-icon:hover { color:var(--dark); }
-.btn-nav { padding:10px 22px; background:var(--dark); color:var(--cream); font-size:9px; font-weight:500; letter-spacing:4px; text-transform:uppercase; text-decoration:none; transition:background .3s; }
-.btn-nav:hover { background:var(--red); }
+/* GRID */
+.prod-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.prod-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
 
-/* ══════════════════════════════════
-   HERO
-══════════════════════════════════ */
-.hero {
-  min-height:100vh;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  padding-top:88px;
-  overflow:hidden;
-}
+/* BANNER */
+.banner{position:relative;overflow:hidden;height:50vh;min-height:320px;display:flex;align-items:flex-end;padding:52px;}
+.banner-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.6) saturate(.7);transition:transform 12s ease;}
+.banner:hover .banner-bg{transform:scale(1.03);}
+.banner::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(26,22,18,.85) 0%,transparent 55%);}
+.banner-content{position:relative;z-index:2;}
+.banner-content h2{font-family:'Playfair Display',serif;font-size:clamp(40px,5vw,72px);font-weight:700;line-height:.92;color:var(--cream);margin-bottom:18px;}
+.banner-content h2 em{font-style:italic;font-weight:400;}
+.banner-link{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--tan);text-decoration:none;display:flex;align-items:center;gap:10px;transition:gap .3s,color .3s;}
+.banner-link:hover{gap:16px;color:var(--cream);}
+.banner-link::after{content:'——→';letter-spacing:0;}
 
-.hero-left {
-  display:flex; flex-direction:column; justify-content:center;
-  padding:80px 52px 80px 52px;
-  position:relative;
-}
-.hero-eyebrow { font-size:9px; letter-spacing:5px; text-transform:uppercase; color:var(--brown); margin-bottom:24px; display:flex; align-items:center; gap:12px; }
-.hero-eyebrow::before { content:''; width:28px; height:1px; background:var(--red); }
-.hero-title { font-family:'Playfair Display',serif; font-size:clamp(52px,5.5vw,80px); font-weight:700; line-height:0.95; letter-spacing:-2px; color:var(--dark); margin-bottom:24px; }
-.hero-title em { font-style:italic; font-weight:400; color:var(--brown); display:block; }
-.hero-desc { font-size:12px; font-weight:300; line-height:1.9; color:var(--brown); max-width:380px; margin-bottom:44px; letter-spacing:0.5px; }
-.hero-cta { display:flex; align-items:center; gap:24px; }
-.btn-primary { padding:16px 36px; background:var(--dark); color:var(--cream); font-size:10px; font-weight:500; letter-spacing:4px; text-transform:uppercase; text-decoration:none; transition:all .3s; position:relative; overflow:hidden; }
-.btn-primary::before { content:''; position:absolute; inset:0; background:var(--red); transform:translateX(-100%); transition:transform .4s cubic-bezier(.16,1,.3,1); z-index:0; }
-.btn-primary:hover::before { transform:translateX(0); }
-.btn-primary span { position:relative; z-index:1; }
-.btn-secondary { font-size:9px; font-weight:500; letter-spacing:4px; text-transform:uppercase; color:var(--brown); text-decoration:none; display:flex; align-items:center; gap:8px; transition:gap .3s, color .3s; }
-.btn-secondary:hover { gap:14px; color:var(--dark); }
-.btn-secondary::after { content:'→'; }
+/* CATS GRID */
+.cats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;}
+.cat-item{position:relative;overflow:hidden;aspect-ratio:2/3;cursor:pointer;text-decoration:none;}
+.cat-item img{width:100%;height:100%;object-fit:cover;filter:saturate(.8) brightness(.85);transition:transform .7s,filter .5s;}
+.cat-item:hover img{transform:scale(1.06);filter:saturate(.9) brightness(.95);}
+.cat-item::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(26,22,18,.7) 0%,transparent 50%);}
+.cat-label{position:absolute;bottom:22px;left:22px;z-index:2;}
+.cat-label span{display:block;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(240,235,227,.6);margin-bottom:4px;}
+.cat-label strong{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream);}
 
-/* stats */
-.hero-stats { display:flex; gap:40px; margin-top:56px; padding-top:32px; border-top:1px solid rgba(92,79,66,0.15); }
-.stat-num { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; color:var(--dark); line-height:1; }
-.stat-label { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:var(--brown); margin-top:4px; }
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-.hero-right { position:relative; overflow:hidden; }
-.hero-img { width:100%; height:100%; object-fit:cover; object-position:center top; animation:heroZoom 18s ease-in-out infinite alternate; }
-@keyframes heroZoom { from{transform:scale(1.04)} to{transform:scale(1.0)} }
-.hero-img-overlay { position:absolute; inset:0; background:linear-gradient(to right, var(--cream) 0%, transparent 15%, transparent 85%, var(--cream) 100%),linear-gradient(to bottom, var(--cream) 0%, transparent 8%); }
-
-/* ══════════════════════════════════
-   FEATURES STRIP
-══════════════════════════════════ */
-.features {
-  display:grid; grid-template-columns:repeat(4,1fr);
-  border-top:1px solid rgba(92,79,66,0.12);
-  border-bottom:1px solid rgba(92,79,66,0.12);
-}
-.feature-item { padding:36px 36px; border-right:1px solid rgba(92,79,66,0.12); }
-.feature-item:last-child { border-right:none; }
-.feature-title { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--dark); margin-bottom:10px; }
-.feature-desc { font-size:11px; font-weight:300; line-height:1.7; color:var(--brown); margin-bottom:16px; }
-.feature-link { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:var(--red); text-decoration:none; display:flex; align-items:center; gap:6px; transition:gap .3s; }
-.feature-link:hover { gap:10px; }
-.feature-link::after { content:'→'; }
-
-/* ══════════════════════════════════
-   ABOUT SECTION
-══════════════════════════════════ */
-.about { display:grid; grid-template-columns:1fr 1fr; min-height:600px; }
-.about-images { position:relative; overflow:hidden; background:var(--beige); }
-.about-grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; height:100%; gap:2px; }
-.about-img { overflow:hidden; }
-.about-img img { width:100%; height:100%; object-fit:cover; transition:transform .8s ease; filter:saturate(0.8) contrast(1.05); }
-.about-img:hover img { transform:scale(1.06); }
-
-.about-content { display:flex; flex-direction:column; justify-content:center; padding:80px 72px; background:var(--white); }
-.section-tag { font-size:8px; letter-spacing:5px; text-transform:uppercase; color:var(--brown); margin-bottom:16px; }
-.about-title { font-family:'Playfair Display',serif; font-size:clamp(32px,3.5vw,48px); font-weight:700; line-height:1.05; color:var(--dark); margin-bottom:28px; }
-.about-body { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-.about-p { font-size:11px; font-weight:300; line-height:1.9; color:var(--brown); }
-
-/* ══════════════════════════════════
-   NEW COLLECTION BANNER
-══════════════════════════════════ */
-.collection-banner {
-  position:relative; overflow:hidden;
-  height:55vh; min-height:360px;
-  display:flex; align-items:flex-end;
-  padding:60px 72px;
-}
-.collection-banner-img { position:absolute; inset:0; background-image:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=85&fit=crop&crop=center'); background-size:cover; background-position:center; filter:brightness(0.65) saturate(0.7); transition:transform 12s ease; }
-.collection-banner:hover .collection-banner-img { transform:scale(1.03); }
-.collection-banner::after { content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(26,22,18,.85) 0%, transparent 60%); }
-.collection-content { position:relative; z-index:2; }
-.collection-content h2 { font-family:'Playfair Display',serif; font-size:clamp(48px,6vw,90px); font-weight:700; line-height:0.9; color:var(--cream); margin-bottom:20px; }
-.collection-content h2 em { font-style:italic; font-weight:400; }
-.collection-link { font-size:9px; letter-spacing:5px; text-transform:uppercase; color:var(--tan); text-decoration:none; display:flex; align-items:center; gap:10px; transition:gap .3s, color .3s; }
-.collection-link:hover { gap:16px; color:var(--cream); }
-.collection-link::after { content:'——→'; letter-spacing:0; }
-
-/* ══════════════════════════════════
-   CATALOG GRID
-══════════════════════════════════ */
-.catalog { padding:100px 52px; background:var(--cream); }
-.catalog-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:52px; }
-.catalog-title { font-family:'Playfair Display',serif; font-size:clamp(36px,4vw,56px); font-weight:700; color:var(--dark); }
-.catalog-subtitle { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--brown); }
-.catalog-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
-.catalog-item { cursor:pointer; }
-.catalog-img { position:relative; overflow:hidden; aspect-ratio:3/4; background:var(--beige); margin-bottom:16px; }
-.catalog-img img { width:100%; height:100%; object-fit:cover; transition:transform .7s ease; filter:saturate(0.85); }
-.catalog-item:hover .catalog-img img { transform:scale(1.07); }
-.catalog-img-overlay { position:absolute; inset:0; background:rgba(26,22,18,0); transition:background .4s; display:flex; align-items:center; justify-content:center; }
-.catalog-item:hover .catalog-img-overlay { background:rgba(26,22,18,0.15); }
-.catalog-explore { position:absolute; opacity:0; transform:translateY(8px); font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--cream); transition:all .3s; }
-.catalog-item:hover .catalog-explore { opacity:1; transform:translateY(0); }
-.catalog-name { font-family:'Playfair Display',serif; font-size:16px; font-weight:600; color:var(--dark); margin-bottom:4px; }
-.catalog-sub  { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--brown); }
-
-/* ══════════════════════════════════
-   ADVANTAGES
-══════════════════════════════════ */
-.advantages { padding:0 0 100px; background:var(--cream); }
-.adv-header { padding:0 52px; margin-bottom:40px; }
-.adv-title { font-family:'Playfair Display',serif; font-size:clamp(36px,4vw,56px); font-weight:700; color:var(--dark); }
-.adv-grid { display:grid; grid-template-columns:1fr 1fr; }
-.adv-item { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid rgba(92,79,66,0.12); }
-.adv-item-img { overflow:hidden; }
-.adv-item-img img { width:100%; height:100%; object-fit:cover; filter:saturate(0.8); transition:transform .7s; min-height:260px; }
-.adv-item:hover .adv-item-img img { transform:scale(1.05); }
-.adv-item-text { padding:44px 40px; background:var(--white); display:flex; flex-direction:column; justify-content:center; }
-.adv-item-title { font-size:10px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:var(--dark); margin-bottom:14px; }
-.adv-item-desc { font-size:11px; font-weight:300; line-height:1.8; color:var(--brown); margin-bottom:20px; }
-.adv-item-link { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:var(--red); text-decoration:none; display:flex; align-items:center; gap:6px; transition:gap .3s; width:fit-content; }
-.adv-item-link:hover { gap:10px; }
-.adv-item-link::after { content:'→'; }
-/* Alternate: text left, image right */
-.adv-item.reverse { direction:rtl; }
-.adv-item.reverse > * { direction:ltr; }
-
-/* ══════════════════════════════════
-   FOOTER
-══════════════════════════════════ */
-footer {
-  background:var(--dark); color:var(--tan);
-  padding:64px 52px 32px;
-}
-.footer-top { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:48px; margin-bottom:56px; }
-.footer-brand-name { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:5px; color:var(--cream); margin-bottom:12px; }
-.footer-tagline { font-size:10px; font-weight:300; line-height:1.8; color:var(--tan); }
-.footer-col-title { font-size:9px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:var(--cream); margin-bottom:20px; }
-.footer-col a { display:block; font-size:10px; font-weight:300; color:var(--tan); text-decoration:none; margin-bottom:10px; letter-spacing:0.5px; transition:color .3s; }
-.footer-col a:hover { color:var(--cream); }
-.footer-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.08); }
-.footer-copy { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(200,191,176,0.4); }
-.footer-new-col { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--tan); }
-
-/* ══════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════ */
-@media (max-width:1024px) {
-  .hero { grid-template-columns:1fr; min-height:auto; }
-  .hero-right { height:55vw; max-height:500px; }
-  .about { grid-template-columns:1fr; }
-  .about-images { min-height:400px; }
-  .catalog-grid { grid-template-columns:repeat(2,1fr); }
-  .footer-top { grid-template-columns:1fr 1fr; gap:32px; }
-}
-@media (max-width:768px) {
-  nav { padding:16px 24px; }
-  .nav-links { display:none; }
-  .hero-left { padding:48px 24px; }
-  .hero-stats { gap:24px; }
-  .features { grid-template-columns:1fr 1fr; }
-  .about-content { padding:48px 32px; }
-  .about-body { grid-template-columns:1fr; }
-  .catalog { padding:60px 24px; }
-  .catalog-grid { grid-template-columns:repeat(2,1fr); gap:14px; }
-  .adv-grid { grid-template-columns:1fr; }
-  .adv-item { grid-template-columns:1fr; }
-  .adv-header { padding:0 24px; }
-  .advantages { padding-bottom:60px; }
-  footer { padding:44px 24px 24px; }
-  .footer-top { grid-template-columns:1fr; gap:28px; }
-  .footer-bottom { flex-direction:column; gap:12px; text-align:center; }
-}
-@media (max-width:480px) {
-  .features { grid-template-columns:1fr; }
-  .catalog-grid { grid-template-columns:1fr; }
-  .hero-cta { flex-direction:column; align-items:flex-start; gap:16px; }
-  .hero-stats { flex-wrap:wrap; gap:20px; }
-  .collection-banner { padding:36px 24px; }
-}
+@media(max-width:1024px){.hero{grid-template-columns:1fr;min-height:auto;}.hero-right{height:60vw;}.prod-grid{grid-template-columns:repeat(2,1fr);}.cats-grid{grid-template-columns:repeat(2,1fr);}.features{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.section{padding:52px 20px;}.hero-left{padding:48px 20px;}.banner{padding:32px 20px;}.prod-grid{grid-template-columns:1fr 1fr;gap:12px;}.cats-grid{grid-template-columns:1fr 1fr;}.hero-cta{flex-direction:column;align-items:flex-start;}.hero-stats{flex-wrap:wrap;gap:20px;}.features{grid-template-columns:1fr;}}
 </style>
-</head>
-<body>
+{% endblock %}
 
-<!-- NAVBAR -->
-<nav id="navbar">
-  <div class="nav-logo">
-    <div class="logo-box">NT</div>
-    <div class="logo-name">NEON THREAD</div>
-  </div>
-  <div class="nav-links">
-    <a href="#">Inicio</a>
-    <a href="#">Colección</a>
-    <a href="#">Catálogo</a>
-    <a href="#">Diseñadores</a>
-    <a href="#">Blog</a>
-  </div>
-  <div class="nav-actions">
-    <div class="nav-icon">♡</div>
-    <div class="nav-icon">🛍</div>
-    <a href="/" class="btn-nav">Mi cuenta</a>
-  </div>
-</nav>
-
+{% block content %}
 <!-- HERO -->
 <section class="hero">
   <div class="hero-left">
     <div class="hero-eyebrow">Colección Invierno 2025</div>
-    <h1 class="hero-title">
-      DESIGN<br>
-      <em>&amp; Freedom</em>
-    </h1>
-    <p class="hero-desc">
-      Ropa de invierno para quienes se niegan a pasar desapercibidos. Cada pieza, una declaración. Cada colección, una historia.
-    </p>
+    <h1 class="hero-h1">DESIGN<br><em>&amp; Freedom</em></h1>
+    <p class="hero-desc">Ropa de invierno para quienes se niegan a pasar desapercibidos. Cada pieza, una declaración.</p>
     <div class="hero-cta">
-      <a href="#catalogo" class="btn-primary"><span>Ver colección</span></a>
-      <a href="#" class="btn-secondary">Conocer más</a>
+      <a href="/catalogo" class="btn-primary">Ver colección</a>
+      <a href="/catalogo?cat=abrigos" class="hero-btn-sec">Abrigos</a>
     </div>
     <div class="hero-stats">
-      <div>
-        <div class="stat-num">150<span style="color:var(--red)">+</span></div>
-        <div class="stat-label">Diseñadores</div>
-      </div>
-      <div>
-        <div class="stat-num">500<span style="color:var(--red)">+</span></div>
-        <div class="stat-label">Clientes</div>
-      </div>
-      <div>
-        <div class="stat-num">20K<span style="color:var(--red)">+</span></div>
-        <div class="stat-label">Piezas</div>
-      </div>
-      <div>
-        <div class="stat-num">50<span style="color:var(--red)">+</span></div>
-        <div class="stat-label">Eventos</div>
-      </div>
+      <div><div class="stat-n">80<span>+</span></div><div class="stat-l">Productos</div></div>
+      <div><div class="stat-n">4<span>+</span></div><div class="stat-l">Categorías</div></div>
+      <div><div class="stat-n">500<span>+</span></div><div class="stat-l">Clientes</div></div>
+      <div><div class="stat-n">2025<span></span></div><div class="stat-l">Colección</div></div>
     </div>
   </div>
   <div class="hero-right">
-    <img class="hero-img" src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&q=85&fit=crop&crop=center" alt="Hero fashion">
-    <div class="hero-img-overlay"></div>
+    <div class="hero-img-wrap">
+      <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=900&q=85&fit=crop&crop=center" alt="Hero">
+      <div class="hero-img-overlay"></div>
+    </div>
   </div>
 </section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    {% for _ in range(3) %}
+    <span class="ticker-item">Colección Invierno 2025</span><span class="ticker-dot">✦</span>
+    <span class="ticker-item">Envío Gratis +$2000</span><span class="ticker-dot">✦</span>
+    <span class="ticker-item">Nueva Temporada</span><span class="ticker-dot">✦</span>
+    <span class="ticker-item">Diseño Exclusivo</span><span class="ticker-dot">✦</span>
+    <span class="ticker-item">Neon Thread 2025</span><span class="ticker-dot">✦</span>
+    {% endfor %}
+  </div>
+</div>
 
 <!-- FEATURES -->
-<section class="features">
-  <div class="feature-item">
-    <div class="feature-title">Independencia</div>
-    <div class="feature-desc">Explora la creatividad de diseñadores independientes de todo el mundo.</div>
-    <a href="#" class="feature-link">Conocer más</a>
-  </div>
-  <div class="feature-item">
-    <div class="feature-title">Unicidad</div>
-    <div class="feature-desc">Descubre el encanto de piezas únicas que destacan sin esfuerzo.</div>
-    <a href="#" class="feature-link">Conocer más</a>
-  </div>
-  <div class="feature-item">
-    <div class="feature-title">Calidad</div>
-    <div class="feature-desc">Artesanía sin igual y atención al detalle en cada prenda.</div>
-    <a href="#" class="feature-link">Conocer más</a>
-  </div>
-  <div class="feature-item">
-    <div class="feature-title">Sustentabilidad</div>
-    <div class="feature-desc">Moda consciente sin comprometer el estilo.</div>
-    <a href="#" class="feature-link">Conocer más</a>
-  </div>
-</section>
+<div class="features">
+  <div class="feat-item reveal"><div class="feat-title">Envío Gratis</div><div class="feat-desc">En pedidos mayores a $2,000 MXN a todo México.</div></div>
+  <div class="feat-item reveal"><div class="feat-title">Calidad Premium</div><div class="feat-desc">Materiales seleccionados para la temporada de frío.</div></div>
+  <div class="feat-item reveal"><div class="feat-title">Devoluciones</div><div class="feat-desc">30 días para cambios y devoluciones sin preguntas.</div></div>
+  <div class="feat-item reveal"><div class="feat-title">Exclusividad</div><div class="feat-desc">Piezas únicas de diseñadores independientes.</div></div>
+</div>
 
-<!-- ABOUT -->
-<section class="about">
-  <div class="about-images">
-    <div class="about-grid">
-      <div class="about-img"><img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=500&q=80&fit=crop&crop=center" alt="Fashion 1"></div>
-      <div class="about-img"><img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80&fit=crop&crop=center" alt="Fashion 2"></div>
-      <div class="about-img"><img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=500&q=80&fit=crop&crop=center" alt="Fashion 3"></div>
-      <div class="about-img"><img src="https://images.unsplash.com/photo-1550614000-4895a10e1bfd?w=500&q=80&fit=crop&crop=center" alt="Fashion 4"></div>
-    </div>
-  </div>
-  <div class="about-content">
-    <div class="section-tag">Sobre nosotros</div>
-    <h2 class="about-title">Where Fashion<br>Meets Freedom</h2>
-    <div class="about-body">
-      <p class="about-p">Creemos que la moda debe ser una expresión de individualidad. Ofrecemos colecciones exclusivas de diseñadores independientes, cuidadosamente seleccionadas.</p>
-      <p class="about-p">Nos esforzamos por conectar diseñadores con entusiastas de la moda que aprecian la artesanía y la historia detrás de cada pieza.</p>
-    </div>
-  </div>
-</section>
-
-<!-- NEW COLLECTION BANNER -->
-<section class="collection-banner">
-  <div class="collection-banner-img"></div>
-  <div class="collection-content">
-    <h2>NEW<br><em>Collection</em></h2>
-    <a href="#" class="collection-link">Descubrir</a>
-  </div>
-</section>
-
-<!-- CATALOG -->
-<section class="catalog" id="catalogo">
-  <div class="catalog-header">
-    <h2 class="catalog-title">Catálogo</h2>
-    <span class="catalog-subtitle">Invierno 2025</span>
-  </div>
-  <div class="catalog-grid">
-    <div class="catalog-item">
-      <div class="catalog-img">
-        <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop&crop=center" alt="Abrigos">
-        <div class="catalog-img-overlay"><span class="catalog-explore">Explorar</span></div>
-      </div>
-      <div class="catalog-name">Abrigos</div>
-      <div class="catalog-sub">12 piezas</div>
-    </div>
-    <div class="catalog-item">
-      <div class="catalog-img">
-        <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80&fit=crop&crop=center" alt="Chamarras">
-        <div class="catalog-img-overlay"><span class="catalog-explore">Explorar</span></div>
-      </div>
-      <div class="catalog-name">Chamarras</div>
-      <div class="catalog-sub">8 piezas</div>
-    </div>
-    <div class="catalog-item">
-      <div class="catalog-img">
-        <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80&fit=crop&crop=center" alt="Suéteres">
-        <div class="catalog-img-overlay"><span class="catalog-explore">Explorar</span></div>
-      </div>
-      <div class="catalog-name">Suéteres</div>
-      <div class="catalog-sub">15 piezas</div>
-    </div>
-    <div class="catalog-item">
-      <div class="catalog-img">
-        <img src="https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=600&q=80&fit=crop&crop=center" alt="Puffer">
-        <div class="catalog-img-overlay"><span class="catalog-explore">Explorar</span></div>
-      </div>
-      <div class="catalog-name">Puffer Jackets</div>
-      <div class="catalog-sub">6 piezas</div>
-    </div>
-    <div class="catalog-item">
-      <div class="catalog-img">
-        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80&fit=crop&crop=center" alt="Looks">
-        <div class="catalog-img-overlay"><span class="catalog-explore">Explorar</span></div>
-      </div>
-      <div class="catalog-name">Looks Completos</div>
-      <div class="catalog-sub">10 estilos</div>
-    </div>
-    <div class="catalog-item">
-      <div class="catalog-img">
-        <img src="https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&q=80&fit=crop&crop=center" alt="Accesorios">
-        <div class="catalog-img-overlay"><span class="catalog-explore">Explorar</span></div>
-      </div>
-      <div class="catalog-name">Accesorios</div>
-      <div class="catalog-sub">20 piezas</div>
-    </div>
-  </div>
-</section>
-
-<!-- ADVANTAGES -->
-<section class="advantages">
-  <div class="adv-header">
-    <h2 class="adv-title">Nuestras<br>Ventajas</h2>
-  </div>
-  <div class="adv-grid">
-    <div class="adv-item">
-      <div class="adv-item-img">
-        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80&fit=crop&crop=center" alt="Diseñadores">
-      </div>
-      <div class="adv-item-text">
-        <div class="adv-item-title">Diseñadores Independientes</div>
-        <div class="adv-item-desc">Celebramos la ingeniosidad de diseñadores independientes. Explora colecciones curadas que muestran creaciones únicas.</div>
-        <a href="#" class="adv-item-link">Explorar</a>
-      </div>
-    </div>
-    <div class="adv-item reverse">
-      <div class="adv-item-img">
-        <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=500&q=80&fit=crop&crop=center" alt="Exclusividad">
-      </div>
-      <div class="adv-item-text">
-        <div class="adv-item-title">Exclusividad &amp; Unicidad</div>
-        <div class="adv-item-desc">Piezas únicas, cada una con su propia historia y encanto. Curadas para quienes buscan lo extraordinario.</div>
-        <a href="#" class="adv-item-link">Explorar</a>
-      </div>
-    </div>
-    <div class="adv-item">
-      <div class="adv-item-img">
-        <img src="https://images.unsplash.com/photo-1550614000-4895a10e1bfd?w=500&q=80&fit=crop&crop=center" alt="Calidad">
-      </div>
-      <div class="adv-item-text">
-        <div class="adv-item-title">Alta Calidad</div>
-        <div class="adv-item-desc">Prendas confeccionadas con los mejores materiales. Calidad que promete longevidad y estilo atemporal.</div>
-        <a href="#" class="adv-item-link">Explorar</a>
-      </div>
-    </div>
-    <div class="adv-item reverse">
-      <div class="adv-item-img">
-        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80&fit=crop&crop=center" alt="Eco">
-      </div>
-      <div class="adv-item-text">
-        <div class="adv-item-title">Eco-Friendly</div>
-        <div class="adv-item-desc">Moda consciente con opciones sostenibles. Colecciones creadas con materiales amigables con el planeta.</div>
-        <a href="#" class="adv-item-link">Explorar</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-top">
+<!-- CATEGORÍAS -->
+<section class="section">
+  <div class="section-header">
     <div>
-      <div class="footer-brand-name">NEON THREAD</div>
-      <p class="footer-tagline">Moda de invierno para quienes se niegan a pasar desapercibidos. Colecciones exclusivas para cada estilo.</p>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Páginas</div>
-      <a href="#">Inicio</a>
-      <a href="#">Colección</a>
-      <a href="#">Catálogo</a>
-      <a href="#">Diseñadores</a>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Cuenta</div>
-      <a href="/">Iniciar sesión</a>
-      <a href="/registro">Registrarse</a>
-      <a href="#">Mi perfil</a>
-      <a href="#">Favoritos</a>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Contacto</div>
-      <a href="#">Instagram</a>
-      <a href="#">TikTok</a>
-      <a href="#">WhatsApp</a>
-      <a href="#">Email</a>
+      <div class="section-eyebrow">Explorar</div>
+      <h2 class="section-title">Por <em>Categoría</em></h2>
     </div>
   </div>
-  <div class="footer-bottom">
-    <div class="footer-copy">© 2025 Neon Thread — Todos los derechos reservados</div>
-    <div class="footer-new-col">New Collection →</div>
+  <div class="cats-grid">
+    <a href="/catalogo?cat=abrigos" class="cat-item reveal">
+      <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80&fit=crop" alt="Abrigos">
+      <div class="cat-label"><span>20 piezas</span><strong>Abrigos</strong></div>
+    </a>
+    <a href="/catalogo?cat=sueteres" class="cat-item reveal">
+      <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80&fit=crop" alt="Suéteres">
+      <div class="cat-label"><span>20 piezas</span><strong>Suéteres</strong></div>
+    </a>
+    <a href="/catalogo?cat=chamarras" class="cat-item reveal">
+      <img src="https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=600&q=80&fit=crop" alt="Chamarras">
+      <div class="cat-label"><span>20 piezas</span><strong>Chamarras</strong></div>
+    </a>
+    <a href="/catalogo?cat=accesorios" class="cat-item reveal">
+      <img src="https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&q=80&fit=crop" alt="Accesorios">
+      <div class="cat-label"><span>20 piezas</span><strong>Accesorios</strong></div>
+    </a>
   </div>
-</footer>
+</section>
 
+<!-- DESTACADOS -->
+<section class="section" style="background:var(--white);padding-top:72px;padding-bottom:72px;">
+  <div class="section-header">
+    <div>
+      <div class="section-eyebrow">Selección</div>
+      <h2 class="section-title">Destacados de <em>la Semana</em></h2>
+    </div>
+    <a href="/catalogo" class="see-all">Ver todo</a>
+  </div>
+  <div class="prod-grid">
+    {% for p in destacados %}
+    <div class="prod-card reveal" onclick="window.location='/producto/{{p.id}}'">
+      <div class="prod-img">
+        <img src="{{ p.img }}" alt="{{ p.nombre }}" loading="lazy">
+        <div class="prod-overlay">
+          <button class="prod-add-btn" onclick="event.stopPropagation();openQuickAdd({{p.id}},{{p.tallas|tojson}})">+ Agregar</button>
+        </div>
+      </div>
+      <div class="prod-name">{{ p.nombre }}</div>
+      <div class="prod-price"><span>${{ "{:,.0f}".format(p.precio) }}</span> MXN</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- BANNER -->
+<section class="banner">
+  <div class="banner-bg" style="background-image:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=85&fit=crop')"></div>
+  <div class="banner-content">
+    <h2>NEW<br><em>Collection</em></h2>
+    <a href="/catalogo" class="banner-link">Ver colección completa</a>
+  </div>
+</section>
+
+<!-- QUICK ADD MODAL -->
+<div id="qaModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(26,22,18,.6);align-items:center;justify-content:center;">
+  <div style="background:var(--white);padding:40px;width:340px;position:relative;">
+    <button onclick="closeQA()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--brown);">✕</button>
+    <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--brown);margin-bottom:16px;">Seleccionar talla</div>
+    <div id="qaTallas" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;"></div>
+    <button onclick="confirmQA()" class="btn-primary" style="width:100%;">Agregar al carrito</button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-// NAVBAR scroll effect
-window.addEventListener('scroll', () => {
-  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
-});
-
-// Scroll reveal
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.style.opacity = '1';
-      e.target.style.transform = 'translateY(0)';
-    }
+let qaPid=null, qaTalla=null;
+function openQuickAdd(pid, tallas){
+  qaPid=pid; qaTalla=tallas[0];
+  const cont=document.getElementById('qaTallas');
+  cont.innerHTML='';
+  tallas.forEach(t=>{
+    const b=document.createElement('button');
+    b.textContent=t; b.dataset.t=t;
+    b.style.cssText='padding:8px 16px;border:1px solid var(--border);background:transparent;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;font-family:Montserrat,sans-serif;';
+    b.onclick=()=>{document.querySelectorAll('#qaTallas button').forEach(x=>x.style.background='transparent');b.style.background=getComputedStyle(document.documentElement).getPropertyValue('--dark');b.style.color=getComputedStyle(document.documentElement).getPropertyValue('--cream');qaTalla=t;};
+    if(t===tallas[0]){b.style.background='#1a1612';b.style.color='#f0ebe3';}
+    cont.appendChild(b);
   });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.feature-item, .catalog-item, .adv-item, .about-content, .stat-num').forEach((el, i) => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(24px)';
-  el.style.transition = `opacity 0.7s ease ${i * 0.08}s, transform 0.7s ease ${i * 0.08}s`;
-  observer.observe(el);
-});
+  const m=document.getElementById('qaModal');
+  m.style.display='flex';
+}
+function closeQA(){document.getElementById('qaModal').style.display='none';}
+function confirmQA(){if(qaPid&&qaTalla){addToCart(qaPid,qaTalla);closeQA();}}
+document.getElementById('qaModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeQA();});
 </script>
-</body>
-</html>
+{% endblock %}

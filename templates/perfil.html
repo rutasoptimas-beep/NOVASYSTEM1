@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Mi Perfil{% endblock %}
+{% block extra_head %}
+<style>
+.profile-hero{background:var(--dark);padding:52px 48px;display:flex;align-items:center;gap:32px;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:white;flex-shrink:0;}
+.profile-hero-info h1{font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,36px);font-weight:700;color:var(--cream);margin-bottom:4px;}
+.profile-hero-info h1 em{font-style:italic;font-weight:400;color:var(--tan);}
+.profile-hero-info p{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--tan);}
+.profile-body{display:grid;grid-template-columns:300px 1fr;gap:32px;padding:48px;}
+.profile-card{background:var(--white);border:1px solid var(--border);padding:32px;}
+.profile-section-title{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--red);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.profile-section-title::before{content:'';width:16px;height:1px;background:var(--red);}
+.profile-field{margin-bottom:20px;}
+.profile-field label{display:block;font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--tan);margin-bottom:5px;}
+.profile-field span{font-size:14px;font-weight:500;color:var(--dark);}
+.profile-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;padding-top:24px;border-top:1px solid var(--border);}
+.profile-stat{text-align:center;padding:16px;background:var(--cream);}
+.profile-stat-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--dark);}
+.profile-stat-n span{color:var(--red);}
+.profile-stat-l{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--brown);margin-top:4px;}
+.orders-list{display:flex;flex-direction:column;gap:16px;}
+.order-card{background:var(--white);border:1px solid var(--border);overflow:hidden;}
+.order-card-header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s;}
+.order-card-header:hover{background:var(--cream);}
+.order-folio{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--dark);}
+.order-date{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--brown);}
+.order-status{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#4caf50;}
+.order-status-dot{width:6px;height:6px;border-radius:50%;background:#4caf50;}
+.order-total{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--dark);}
+.order-body{padding:20px 24px;display:none;}
+.order-body.open{display:block;}
+.order-item-row{display:flex;justify-content:space-between;font-size:11px;padding:8px 0;border-bottom:1px solid var(--border);color:var(--brown);}
+.order-item-row:last-child{border-bottom:none;}
+.order-item-row strong{color:var(--dark);}
+.no-orders{text-align:center;padding:60px 20px;}
+.no-orders p{font-family:'Playfair Display',serif;font-size:22px;color:var(--brown);font-style:italic;margin-bottom:20px;}
+@media(max-width:900px){.profile-body{grid-template-columns:1fr;padding:28px 20px;}.profile-hero{padding:36px 20px;flex-direction:column;text-align:center;gap:20px;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<div class="profile-hero">
+  <div class="profile-avatar">{{ usuario.nombre[0]|upper }}</div>
+  <div class="profile-hero-info">
+    <h1>{{ usuario.nombre }} <em>{{ usuario.apellido }}</em></h1>
+    <p>@{{ usuario.username }} · Miembro desde {{ usuario.creado_en.strftime('%B %Y') if usuario.creado_en else '2025' }}</p>
+  </div>
+</div>
+
+<div class="profile-body">
+  <!-- LEFT: INFO -->
+  <div>
+    <div class="profile-card">
+      <div class="profile-section-title">Mi información</div>
+      <div class="profile-field">
+        <label>Nombre completo</label>
+        <span>{{ usuario.nombre }} {{ usuario.apellido }}</span>
+      </div>
+      <div class="profile-field">
+        <label>Usuario</label>
+        <span>@{{ usuario.username }}</span>
+      </div>
+      <div class="profile-field">
+        <label>Teléfono</label>
+        <span>{{ usuario.telefono }}</span>
+      </div>
+      <div class="profile-field">
+        <label>Miembro desde</label>
+        <span>{{ usuario.creado_en.strftime('%d/%m/%Y') if usuario.creado_en else '2025' }}</span>
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-n">{{ pedidos|length }}<span></span></div>
+          <div class="profile-stat-l">Pedidos</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-n">${{ "{:,.0f}".format(pedidos|sum(attribute='total')) if pedidos else '0' }}</div>
+          <div class="profile-stat-l">Total gastado</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <a href="/catalogo" class="btn-primary" style="display:block;text-align:center;margin-bottom:10px;">Ver catálogo</a>
+      <a href="/carrito" class="btn-outline" style="display:block;text-align:center;">Mi carrito</a>
+    </div>
+  </div>
+
+  <!-- RIGHT: ORDERS -->
+  <div>
+    <div style="font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="display:block;width:16px;height:1px;background:var(--red);"></span>Historial</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--dark);margin-bottom:28px;">Mis <em style="font-weight:400;color:var(--brown);font-style:italic;">Pedidos</em></h2>
+
+    {% if pedidos %}
+    <div class="orders-list">
+      {% for p in pedidos %}
+      <div class="order-card">
+        <div class="order-card-header" onclick="toggleOrder('order{{loop.index}}')">
+          <div>
+            <div class="order-folio">{{ p.folio }}</div>
+            <div class="order-date">{{ p.creado_en.strftime('%d/%m/%Y · %H:%M') }}</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="order-status"><div class="order-status-dot"></div>Confirmado</div>
+            <div style="font-size:9px;letter-spacing:1px;color:var(--tan);margin-top:2px;">{{ p.items|length }} artículo{% if p.items|length != 1 %}s{% endif %}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="order-total">${{ "{:,.0f}".format(p.total) }}</div>
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tan);">MXN · Ver ▾</div>
+          </div>
+        </div>
+        <div class="order-body" id="order{{loop.index}}">
+          {% for item in p.items %}
+          <div class="order-item-row">
+            <span><strong>{{ item.nombre }}</strong> — Talla {{ item.talla }}</span>
+            <span>{{ item.qty }} × ${{ "{:,.0f}".format(item.precio) }} = <strong>${{ "{:,.0f}".format(item.subtotal) }}</strong></span>
+          </div>
+          {% endfor %}
+          <div style="text-align:right;margin-top:12px;">
+            <a href="/ticket/{{ p.folio }}" style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red);text-decoration:none;">Ver ticket →</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-orders">
+      <p>Aún no tienes pedidos.</p>
+      <a href="/catalogo" class="btn-primary">Explorar colección</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleOrder(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+{% endblock %}

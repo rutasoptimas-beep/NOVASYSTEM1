@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Carrito{% endblock %}
+{% block extra_head %}
+<style>
+.cart-page{display:grid;grid-template-columns:1fr 360px;gap:32px;padding:52px 48px;align-items:start;}
+.cart-left h1{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.cart-left h1 em{font-style:italic;font-weight:400;color:var(--brown);}
+.cart-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--brown);margin-bottom:36px;}
+.cart-items{display:flex;flex-direction:column;gap:0;}
+.cart-item{display:grid;grid-template-columns:100px 1fr auto;gap:20px;padding:24px 0;border-bottom:1px solid var(--border);align-items:center;animation:fadeUp .4s ease;}
+.cart-item-img{aspect-ratio:3/4;overflow:hidden;background:var(--beige);}
+.cart-item-img img{width:100%;height:100%;object-fit:cover;filter:saturate(.88);}
+.cart-item-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--dark);margin-bottom:4px;cursor:pointer;}
+.cart-item-name:hover{color:var(--red);}
+.cart-item-meta{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--brown);margin-bottom:14px;}
+.cart-item-price{font-size:14px;font-weight:500;color:var(--dark);margin-bottom:14px;}
+.cart-item-price span{color:var(--red);}
+.qty-ctrl-sm{display:flex;align-items:center;border:1px solid var(--border);width:fit-content;margin-bottom:12px;}
+.qty-ctrl-sm form{display:contents;}
+.qty-ctrl-sm button{width:30px;height:30px;background:none;border:none;cursor:pointer;font-size:15px;color:var(--dark);transition:background .2s;}
+.qty-ctrl-sm button:hover{background:var(--dark);color:var(--cream);}
+.qty-ctrl-sm span{width:32px;text-align:center;font-size:12px;font-weight:500;}
+.btn-del{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--tan);background:none;border:none;cursor:pointer;transition:color .3s;padding:0;}
+.btn-del:hover{color:var(--red);}
+.cart-item-right{text-align:right;}
+.cart-subtotal{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--dark);}
+.btn-buy-item{margin-top:10px;padding:9px 18px;background:transparent;border:1px solid var(--dark);color:var(--dark);font-size:8px;font-weight:500;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;white-space:nowrap;}
+.btn-buy-item:hover{background:var(--dark);color:var(--cream);}
+
+/* ORDER SUMMARY */
+.order-summary{background:var(--white);border:1px solid var(--border);padding:36px;position:sticky;top:100px;}
+.summary-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:28px;}
+.summary-row{display:flex;justify-content:space-between;font-size:11px;color:var(--brown);margin-bottom:12px;}
+.summary-row.total{border-top:1px solid var(--border);padding-top:16px;margin-top:8px;font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--dark);}
+.summary-row.total span{color:var(--red);}
+.btn-checkout{width:100%;padding:16px;background:var(--dark);border:none;color:var(--cream);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:500;letter-spacing:5px;text-transform:uppercase;cursor:pointer;margin-top:20px;transition:background .3s;}
+.btn-checkout:hover{background:var(--red);}
+.empty-cart{text-align:center;padding:100px 20px;}
+.empty-cart p{font-family:'Playfair Display',serif;font-size:28px;color:var(--brown);font-style:italic;margin-bottom:24px;}
+@media(max-width:900px){.cart-page{grid-template-columns:1fr;padding:36px 20px;}.order-summary{position:static;}}
+@media(max-width:600px){.cart-item{grid-template-columns:80px 1fr auto;gap:14px;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="padding:32px 48px 0;background:var(--white);border-bottom:1px solid var(--border);">
+  <div style="font-size:8px;letter-spacing:5px;text-transform:uppercase;color:var(--brown);display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="display:block;width:18px;height:1px;background:var(--red);"></span>Tu selección</div>
+  <h1 style="font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,48px);font-weight:700;color:var(--dark);padding-bottom:28px;">Carrito <em style="font-weight:400;color:var(--brown);font-style:italic;">de Compras</em></h1>
+</div>
+
+{% if items %}
+<div class="cart-page">
+  <!-- LEFT: ITEMS -->
+  <div class="cart-left">
+    <div class="cart-sub">{{ items|length }} artículo{% if items|length != 1 %}s{% endif %} en tu carrito</div>
+    <div class="cart-items">
+      {% for item in items %}
+      <div class="cart-item">
+        <div class="cart-item-img" onclick="window.location='/producto/{{item.id}}'" style="cursor:pointer;">
+          <img src="{{ item.img }}" alt="{{ item.nombre }}" loading="lazy">
+        </div>
+        <div>
+          <div class="cart-item-name" onclick="window.location='/producto/{{item.id}}'">{{ item.nombre }}</div>
+          <div class="cart-item-meta">Talla: {{ item.talla }} &nbsp;·&nbsp; {{ item.categoria|capitalize }}</div>
+          <div class="cart-item-price"><span>${{ "{:,.0f}".format(item.precio) }}</span> MXN c/u</div>
+          <!-- QTY CONTROL -->
+          <div class="qty-ctrl-sm">
+            <form method="POST" action="/carrito/actualizar" style="display:contents;">
+              <input type="hidden" name="key" value="{{ item.key }}">
+              <input type="hidden" name="action" value="remove">
+              <button type="submit">−</button>
+            </form>
+            <span>{{ item.qty }}</span>
+            <form method="POST" action="/carrito/actualizar" style="display:contents;">
+              <input type="hidden" name="key" value="{{ item.key }}">
+              <input type="hidden" name="action" value="add">
+              <button type="submit">+</button>
+            </form>
+          </div>
+          <form method="POST" action="/carrito/actualizar" style="display:inline;">
+            <input type="hidden" name="key" value="{{ item.key }}">
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="btn-del">✕ Eliminar</button>
+          </form>
+        </div>
+        <div class="cart-item-right">
+          <div class="cart-subtotal">${{ "{:,.0f}".format(item.subtotal) }}</div>
+          <!-- COMPRA INDIVIDUAL -->
+          <form method="POST" action="/comprar">
+            <input type="hidden" name="keys" value="{{ item.key }}">
+            <button type="submit" class="btn-buy-item">Comprar solo esto</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="margin-top:24px;">
+      <a href="/catalogo" style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--brown);text-decoration:none;display:flex;align-items:center;gap:8px;transition:gap .3s,color .3s;" onmouseover="this.style.gap='14px';this.style.color='#1a1612'" onmouseout="this.style.gap='8px';this.style.color='#5c4f42'">← Seguir comprando</a>
+    </div>
+  </div>
+
+  <!-- RIGHT: SUMMARY -->
+  <div class="order-summary">
+    <div class="summary-title">Resumen</div>
+    <div class="summary-row"><span>Subtotal ({{ items|length }} artículos)</span><span>${{ "{:,.0f}".format(total) }} MXN</span></div>
+    <div class="summary-row"><span>Envío</span><span>{% if total >= 2000 %}Gratis{% else %}$150 MXN{% endif %}</span></div>
+    {% if total < 2000 %}
+    <div style="font-size:9px;color:var(--brown);margin-top:-4px;margin-bottom:8px;">Agrega ${{ "{:,.0f}".format(2000 - total) }} más para envío gratis</div>
+    {% endif %}
+    <div class="summary-row total"><span>Total</span><span>${{ "{:,.0f}".format(total + (0 if total >= 2000 else 150)) }} MXN</span></div>
+    <!-- COMPRAR TODO -->
+    <form method="POST" action="/comprar">
+      <button type="submit" class="btn-checkout">Comprar todo el carrito</button>
+    </form>
+    <div style="margin-top:16px;font-size:9px;letter-spacing:1px;color:var(--tan);text-align:center;line-height:1.7;">
+      🔒 Compra simulada · No se realizará ningún cargo real<br>
+      Pago seguro · Devoluciones en 30 días
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="empty-cart">
+  <p>Tu carrito está vacío.</p>
+  <a href="/catalogo" class="btn-primary">Explorar colección</a>
+</div>
+{% endif %}
+{% endblock %}

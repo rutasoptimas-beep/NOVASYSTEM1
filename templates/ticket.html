@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Ticket {{ pedido.folio }}{% endblock %}
+{% block extra_head %}
+<style>
+.ticket-page{max-width:680px;margin:0 auto;padding:60px 24px 80px;}
+.ticket-header{text-align:center;margin-bottom:52px;}
+.ticket-check{width:72px;height:72px;border-radius:50%;background:var(--dark);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;animation:popIn .6s cubic-bezier(.16,1,.3,1) both;}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.ticket-header h1{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--dark);margin-bottom:8px;}
+.ticket-header h1 em{font-style:italic;font-weight:400;color:var(--brown);}
+.ticket-header p{font-size:11px;font-weight:300;color:var(--brown);letter-spacing:1px;}
+.ticket-card{background:var(--white);border:1px solid var(--border);overflow:hidden;}
+.ticket-top{background:var(--dark);padding:28px 36px;display:flex;justify-content:space-between;align-items:center;}
+.ticket-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:5px;color:var(--cream);}
+.ticket-folio{text-align:right;}
+.ticket-folio-label{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--tan);margin-bottom:4px;}
+.ticket-folio-num{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cream);}
+.ticket-body{padding:36px;}
+.ticket-section-title{font-size:8px;letter-spacing:5px;text-transform:uppercase;color:var(--brown);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.ticket-section-title::before{content:'';width:16px;height:1px;background:var(--red);}
+.ticket-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;padding-bottom:28px;border-bottom:1px dashed var(--beige);}
+.ticket-meta-item label{display:block;font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--tan);margin-bottom:4px;}
+.ticket-meta-item span{font-size:13px;font-weight:500;color:var(--dark);}
+.ticket-items{margin-bottom:28px;}
+.ticket-item-row{display:grid;grid-template-columns:1fr auto auto;gap:16px;padding:14px 0;border-bottom:1px solid var(--border);align-items:center;font-size:12px;}
+.ticket-item-row:last-child{border-bottom:none;}
+.ticket-item-name{font-weight:500;color:var(--dark);}
+.ticket-item-meta{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--brown);margin-top:3px;}
+.ticket-item-qty{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--brown);text-align:center;}
+.ticket-item-price{font-weight:600;color:var(--dark);text-align:right;white-space:nowrap;}
+.ticket-totals{padding-top:20px;border-top:1px solid var(--border);}
+.ticket-total-row{display:flex;justify-content:space-between;font-size:11px;color:var(--brown);margin-bottom:10px;}
+.ticket-total-row.grand{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark);margin-top:12px;padding-top:14px;border-top:2px solid var(--dark);}
+.ticket-total-row.grand span{color:var(--red);}
+.ticket-bottom{background:var(--beige);padding:24px 36px;display:flex;justify-content:space-between;align-items:center;}
+.ticket-status{display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--brown);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;animation:pulse2 2s ease infinite;}
+@keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(76,175,80,.4)}70%{box-shadow:0 0 0 6px rgba(76,175,80,0)}}
+.ticket-actions{display:flex;gap:12px;margin-top:40px;justify-content:center;}
+.ticket-sim-notice{background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.15);border-left:3px solid var(--red);padding:16px 20px;margin-top:28px;margin-bottom:0;}
+.ticket-sim-notice p{font-size:10px;letter-spacing:1px;color:var(--brown);line-height:1.7;}
+.ticket-sim-notice strong{color:var(--red);}
+@media(max-width:600px){.ticket-top{flex-direction:column;gap:16px;text-align:center;}.ticket-meta-grid{grid-template-columns:1fr;gap:14px;}.ticket-item-row{grid-template-columns:1fr auto;}.ticket-item-qty{display:none;}.ticket-bottom{flex-direction:column;gap:12px;text-align:center;}.ticket-actions{flex-direction:column;align-items:center;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-page">
+  <div class="ticket-header">
+    <div class="ticket-check">✓</div>
+    <h1>¡Compra <em>Confirmada!</em></h1>
+    <p>Gracias por tu pedido, {{ usuario.nombre }}. Aquí está tu ticket de compra.</p>
+  </div>
+
+  <div class="ticket-card">
+    <!-- TOP BAR -->
+    <div class="ticket-top">
+      <div class="ticket-logo">NEON THREAD</div>
+      <div class="ticket-folio">
+        <div class="ticket-folio-label">Folio</div>
+        <div class="ticket-folio-num">{{ pedido.folio }}</div>
+      </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="ticket-body">
+      <!-- META -->
+      <div class="ticket-section-title">Información del pedido</div>
+      <div class="ticket-meta-grid">
+        <div class="ticket-meta-item">
+          <label>Cliente</label>
+          <span>{{ usuario.nombre }} {{ usuario.apellido }}</span>
+        </div>
+        <div class="ticket-meta-item">
+          <label>Usuario</label>
+          <span>@{{ usuario.username }}</span>
+        </div>
+        <div class="ticket-meta-item">
+          <label>Fecha</label>
+          <span>{{ pedido.creado_en.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+        <div class="ticket-meta-item">
+          <label>Estado</label>
+          <span style="color:#4caf50;font-weight:600;">✓ Confirmado</span>
+        </div>
+      </div>
+
+      <!-- ITEMS -->
+      <div class="ticket-section-title">Artículos</div>
+      <div class="ticket-items">
+        {% for item in items %}
+        <div class="ticket-item-row">
+          <div>
+            <div class="ticket-item-name">{{ item.nombre }}</div>
+            <div class="ticket-item-meta">Talla: {{ item.talla }}</div>
+          </div>
+          <div class="ticket-item-qty">× {{ item.qty }}</div>
+          <div class="ticket-item-price">${{ "{:,.0f}".format(item.subtotal) }} MXN</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- TOTALS -->
+      <div class="ticket-totals">
+        <div class="ticket-total-row"><span>Subtotal</span><span>${{ "{:,.0f}".format(pedido.total) }} MXN</span></div>
+        <div class="ticket-total-row"><span>Envío</span><span>{% if pedido.total >= 2000 %}Gratis{% else %}$150 MXN{% endif %}</span></div>
+        <div class="ticket-total-row grand">
+          <span>Total</span>
+          <span>${{ "{:,.0f}".format(pedido.total + (0 if pedido.total >= 2000 else 150)) }} MXN</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="ticket-bottom">
+      <div class="ticket-status">
+        <div class="status-dot"></div>
+        Pedido en proceso
+      </div>
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--tan);">© 2025 Neon Thread</div>
+    </div>
+  </div>
+
+  <!-- AVISO SIMULACIÓN -->
+  <div class="ticket-sim-notice">
+    <p><strong>⚠ Compra simulada:</strong> Este es un ticket de demostración. No se realizó ningún cargo real ni se procesó ningún pago. Este sistema es solo una simulación para fines de desarrollo.</p>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="ticket-actions">
+    <a href="/catalogo" class="btn-primary">Seguir comprando</a>
+    <a href="/perfil" class="btn-outline">Ver mis pedidos</a>
+    <button onclick="window.print()" class="btn-outline">🖨 Imprimir ticket</button>
+  </div>
+</div>
+{% endblock %}
