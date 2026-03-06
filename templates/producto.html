@@ -86,7 +86,7 @@
       <div class="prod-meta-item">📦 <span>Envío gratis</span> en pedidos +$2,000 MXN</div>
       <div class="prod-meta-item">🔄 <span>Devoluciones</span> en 30 días</div>
       <div class="prod-meta-item">✓ <span>Disponible</span> para entrega inmediata</div>
-      <div class="prod-meta-item">🏷 Código: <span>NT-{{ producto.id|string.zfill(4) if producto.id < 1000 else producto.id }}</span></div>
+      <div class="prod-meta-item">🏷 Código: <span>NT-{{ '%04d' % producto.id }}</span></div>
     </div>
   </div>
 </div>
