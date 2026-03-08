@@ -379,7 +379,7 @@ def perfil():
             'creado_en': p.creado_en,
             'metodo_pago': getattr(p, 'metodo_pago', 'tarjeta'),
             'direccion': getattr(p, 'direccion', ''),
-            'productos': json.loads(p.productos_json)
+            'productos': json.loads(p.items_json)
         })
     return render_template('perfil.html', usuario=current_user, pedidos=pedidos_data)
 
