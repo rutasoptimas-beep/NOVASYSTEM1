@@ -161,6 +161,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div class="field-bar"></div>
         </div>
         <div class="field field-full anim a5">
+          <label>Correo electrónico</label>
+          <input type="email" name="email" placeholder="tu@correo.com" value="{{ campos.get('email','') }}" required>
+          <div class="field-bar"></div>
+        </div>
+        <div class="field field-full anim a5">
           <label>Contraseña</label>
           <input type="password" name="password" id="pwdInput" placeholder="Mínimo 6 caracteres" required>
           <div class="field-bar"></div>
