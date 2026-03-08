@@ -83,6 +83,16 @@
           <label>Estado</label>
           <span style="color:#4caf50;font-weight:600;">✓ Confirmado</span>
         </div>
+        <div class="ticket-meta-item">
+          <label>Método de pago</label>
+          <span>{% if pedido.metodo_pago == 'tarjeta' %}💳 Tarjeta{% elif pedido.metodo_pago == 'oxxo' %}🏪 OXXO Pay{% elif pedido.metodo_pago == 'transferencia' %}🏦 Transferencia{% else %}💳 Tarjeta{% endif %}</span>
+        </div>
+        {% if pedido.direccion %}
+        <div class="ticket-meta-item" style="grid-column:1/-1;">
+          <label>Dirección de entrega</label>
+          <span>{{ pedido.direccion }}</span>
+        </div>
+        {% endif %}
       </div>
 
       <!-- ITEMS -->

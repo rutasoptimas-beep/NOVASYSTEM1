@@ -44,6 +44,8 @@ class Pedido(db.Model):
     items_json  = db.Column(db.Text, nullable=False)
     creado_en   = db.Column(db.DateTime, default=datetime.utcnow)
     status      = db.Column(db.String(20), default='confirmado')
+    metodo_pago = db.Column(db.String(20), default='tarjeta')
+    direccion   = db.Column(db.String(300), default='')
 
 @login_manager.user_loader
 def load_user(uid): return Usuario.query.get(int(uid))
@@ -198,7 +200,7 @@ def registro():
             db.session.add(u)
             db.session.commit()
             return redirect(url_for('login'))
-    return render_template('registro.html', error=error, campos={})
+    return render_template('registro.html', error=error)
 
 @app.route('/inicio')
 @login_required
@@ -288,41 +290,69 @@ def actualizar_carrito():
 def comprar():
     keys = request.form.getlist('keys')
     cart = session.get('carrito', {})
+    if not keys:
+        keys = list(cart.keys())
+    # Guardar keys en session para el checkout
+    session['checkout_keys'] = keys
+    session.modified = True
+    return redirect(url_for('checkout'))
+
+@app.route('/checkout', methods=['GET', 'POST'])
+@login_required
+def checkout():
+    keys = session.get('checkout_keys', [])
+    cart = session.get('carrito', {})
     items_compra = []
     total = 0
-    if not keys:  # comprar todo el carrito
+    if not keys:
         keys = list(cart.keys())
     for key in keys:
         if key in cart:
             item = cart[key]
-            p    = get_producto(item['id'])
+            p = get_producto(item['id'])
             if p:
                 subtotal = p['precio'] * item['qty']
-                total   += subtotal
+                total += subtotal
                 items_compra.append({
                     'nombre': p['nombre'], 'talla': item['talla'],
-                    'qty': item['qty'], 'precio': p['precio'], 'subtotal': subtotal
+                    'qty': item['qty'], 'precio': p['precio'],
+                    'subtotal': subtotal, 'img': p['img']
                 })
     if not items_compra:
         return redirect(url_for('carrito'))
 
-    folio  = gen_folio()
-    pedido = Pedido(
-        usuario_id = current_user.id,
-        folio      = folio,
-        total      = total,
-        items_json = json.dumps(items_compra)
-    )
-    db.session.add(pedido)
-    db.session.commit()
+    if request.method == 'POST':
+        metodo = request.form.get('metodo_pago', 'tarjeta')
+        direccion = request.form.get('direccion', '')
+        colonia   = request.form.get('colonia', '')
+        ciudad    = request.form.get('ciudad', '')
+        cp        = request.form.get('cp', '')
+        referencia = request.form.get('referencia', '')
 
-    # Eliminar del carrito los items comprados
-    for key in keys:
-        cart.pop(key, None)
-    session['carrito'] = cart
-    session.modified   = True
+        folio  = gen_folio()
+        pedido = Pedido(
+            usuario_id = current_user.id,
+            folio      = folio,
+            total      = total,
+            items_json = json.dumps(items_compra),
+            metodo_pago = metodo,
+            direccion   = f"{direccion}, {colonia}, {ciudad} CP {cp}. Ref: {referencia}"
+        )
+        db.session.add(pedido)
+        db.session.commit()
 
-    return redirect(url_for('ticket', folio=folio))
+        for key in keys:
+            cart.pop(key, None)
+        session['carrito'] = cart
+        session.pop('checkout_keys', None)
+        session.modified = True
+
+        return redirect(url_for('ticket', folio=folio))
+
+    envio = 0 if total >= 2000 else 150
+    return render_template('checkout.html', usuario=current_user,
+                           items=items_compra, total=total, envio=envio,
+                           gran_total=total+envio)
 
 @app.route('/ticket/<folio>')
 @login_required
