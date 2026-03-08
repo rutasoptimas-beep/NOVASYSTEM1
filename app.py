@@ -447,6 +447,7 @@ def google_callback():
         print(f'Google OAuth error: {e}')
         return redirect(url_for('login'))
 
+# ── GOOGLE OAUTH CALLBACK ────────────────────────────────────
 # ── RECUPERAR CONTRASEÑA ─────────────────────────────────────
 
 def enviar_codigo_resend(email_destino, codigo, nombre):
