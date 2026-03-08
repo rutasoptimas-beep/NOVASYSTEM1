@@ -120,22 +120,22 @@ def login():
 
 # ───────────── REGISTRO (ARREGLADO) ─────────────
 
-@app.route("/registro", methods=["GET", "POST"])
+@app.route('/registro', methods=['GET','POST'])
 def registro():
 
     if current_user.is_authenticated:
-        return redirect(url_for("inicio"))
+        return redirect(url_for('inicio'))
 
     error = None
     campos = {}
 
-    if request.method == "POST":
+    if request.method == 'POST':
 
-        nombre = request.form.get("nombre", "").strip()
-        apellido = request.form.get("apellido", "").strip()
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-        telefono = request.form.get("telefono", "").strip()
+        nombre   = request.form.get('nombre','').strip()
+        apellido = request.form.get('apellido','').strip()
+        username = request.form.get('username','').strip()
+        password = request.form.get('password','').strip()
+        telefono = request.form.get('telefono','').strip()
 
         campos = {
             "nombre": nombre,
@@ -145,19 +145,19 @@ def registro():
         }
 
         if not all([nombre, apellido, username, password, telefono]):
-            error = "Todos los campos son obligatorios"
+            error = 'Todos los campos son obligatorios'
 
         elif len(username) < 4:
-            error = "El usuario debe tener al menos 4 caracteres"
+            error = 'El usuario debe tener al menos 4 caracteres'
 
         elif len(password) < 6:
-            error = "La contraseña debe tener al menos 6 caracteres"
+            error = 'La contraseña debe tener al menos 6 caracteres'
 
         elif not re.match(r'^\+?[\d\s\-]{7,15}$', telefono):
-            error = "Número de teléfono inválido"
+            error = 'Número de teléfono inválido'
 
         elif Usuario.query.filter_by(username=username).first():
-            error = "Ese nombre de usuario ya está en uso"
+            error = 'Ese nombre de usuario ya está en uso'
 
         else:
             u = Usuario(nombre=nombre, apellido=apellido, username=username, telefono=telefono)
@@ -166,10 +166,9 @@ def registro():
             db.session.add(u)
             db.session.commit()
 
-            return redirect(url_for("login"))
+            return redirect(url_for('login'))
 
-    return render_template("registro.html", error=error, campos=campos)
-
+    return render_template('registro.html', error=error, campos=campos)
 
 # ───────────── INICIO ─────────────
 
