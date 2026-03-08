@@ -372,8 +372,11 @@ def perfil():
     pedidos_data = []
     for p in pedidos:
         pedidos_data.append({
-            'id': p.id, 'folio': p.folio, 'total': p.total,
-            'status': p.status, 'creado_en': p.creado_en,
+            'id': p.id,
+            'folio': p.folio,
+            'total': p.total,
+            'status': p.status,
+            'creado_en': p.creado_en,
             'metodo_pago': getattr(p, 'metodo_pago', 'tarjeta'),
             'direccion': getattr(p, 'direccion', ''),
             'items': json.loads(p.items_json)
