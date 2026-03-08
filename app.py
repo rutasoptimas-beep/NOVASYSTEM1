@@ -447,46 +447,6 @@ def google_callback():
         print(f'Google OAuth error: {e}')
         return redirect(url_for('login'))
 
-# ── GOOGLE OAUTH CALLBACK ────────────────────────────────────
-
-@app.route('/google/callback')
-def google_callback():
-    if not google.authorized:
-        return redirect(url_for('google.login'))
-    try:
-        resp = google.get('/oauth2/v2/userinfo')
-        if not resp.ok:
-            return redirect(url_for('login'))
-        info      = resp.json()
-        google_id = info.get('id')
-        email     = info.get('email', '')
-        nombre    = info.get('given_name', info.get('name', 'Usuario').split()[0])
-        apellido  = info.get('family_name', '')
-
-        usuario = Usuario.query.filter_by(google_id=google_id).first()
-        if not usuario:
-            usuario = Usuario.query.filter_by(email=email).first()
-            if usuario:
-                usuario.google_id = google_id
-                db.session.commit()
-            else:
-                username = email.split('@')[0] + '_' + ''.join(random.choices(string.digits, k=4))
-                while Usuario.query.filter_by(username=username).first():
-                    username = email.split('@')[0] + '_' + ''.join(random.choices(string.digits, k=4))
-                usuario = Usuario(
-                    nombre=nombre, apellido=apellido,
-                    username=username, telefono='',
-                    email=email, google_id=google_id,
-                    password_hash=generate_password_hash(os.urandom(24).hex())
-                )
-                db.session.add(usuario)
-                db.session.commit()
-        login_user(usuario, remember=True)
-        return redirect(url_for('inicio'))
-    except Exception as e:
-        print(f'Google OAuth error: {e}')
-        return redirect(url_for('login'))
-
 # ── RECUPERAR CONTRASEÑA ─────────────────────────────────────
 
 def enviar_codigo_resend(email_destino, codigo, nombre):
