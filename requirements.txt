@@ -3,5 +3,4 @@ Flask-Login
 Flask-SQLAlchemy
 gunicorn
 psycopg2-binary
-flask-dance
 requests

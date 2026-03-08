@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_dance.contrib.google import make_google_blueprint, google
 from datetime import datetime, timedelta
 import os, re, json, random, string, requests
 
@@ -20,19 +19,9 @@ if DATABASE_URL.startswith('postgres://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
-google_bp = make_google_blueprint(
-    client_id=GOOGLE_CLIENT_ID,
-    client_secret=GOOGLE_CLIENT_SECRET,
-    scope=['openid','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
-    redirect_url='/google/callback'
-)
-
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-app.register_blueprint(google_bp, url_prefix='/login')
 
 # ── MODELOS ──────────────────────────────────────────────────
 
@@ -407,17 +396,45 @@ def perfil():
         })
     return render_template('perfil.html', usuario=current_user, pedidos=pedidos_data)
 
-# ── GOOGLE OAUTH ─────────────────────────────────────────────
+# ── GOOGLE OAUTH MANUAL ──────────────────────────────────────
+
+@app.route('/login/google')
+def google_login():
+    import urllib.parse
+    params = {
+        'client_id': GOOGLE_CLIENT_ID,
+        'redirect_uri': 'https://novasystem-o5cs.onrender.com/google/callback',
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'access_type': 'online',
+    }
+    url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urllib.parse.urlencode(params)
+    return redirect(url)
 
 @app.route('/google/callback')
 def google_callback():
-    if not google.authorized:
-        return redirect(url_for('google.login'))
+    import urllib.parse
+    code = request.args.get('code')
+    if not code:
+        return redirect(url_for('login'))
     try:
-        resp = google.get('/oauth2/v2/userinfo')
-        if not resp.ok:
+        # Intercambiar code por token
+        token_resp = requests.post('https://oauth2.googleapis.com/token', data={
+            'code': code,
+            'client_id': GOOGLE_CLIENT_ID,
+            'client_secret': GOOGLE_CLIENT_SECRET,
+            'redirect_uri': 'https://novasystem-o5cs.onrender.com/google/callback',
+            'grant_type': 'authorization_code',
+        })
+        token_data = token_resp.json()
+        access_token = token_data.get('access_token')
+        if not access_token:
             return redirect(url_for('login'))
-        info      = resp.json()
+
+        # Obtener info del usuario
+        info_resp = requests.get('https://www.googleapis.com/oauth2/v2/userinfo',
+                                 headers={'Authorization': f'Bearer {access_token}'})
+        info      = info_resp.json()
         google_id = info.get('id')
         email     = info.get('email', '')
         nombre    = info.get('given_name', info.get('name', 'Usuario').split()[0])
