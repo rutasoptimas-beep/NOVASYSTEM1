@@ -2,11 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_dance.contrib.google import make_google_blueprint, google
 from datetime import datetime, timedelta
 import os, re, json, random, string, requests
 
-RESEND_API_KEY = os.environ.get('RESEND_API_KEY', 're_VcRUYJJY_PiULgbyQaku6v1yjfubpdFFK')
-RESEND_FROM    = 'onboarding@resend.dev'
+RESEND_API_KEY       = os.environ.get('RESEND_API_KEY', 're_VcRUYJJY_PiULgbyQaku6v1yjfubpdFFK')
+RESEND_FROM          = 'onboarding@resend.dev'
+GOOGLE_CLIENT_ID     = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'neonthread-secret-2025')
@@ -17,10 +20,19 @@ if DATABASE_URL.startswith('postgres://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+google_bp = make_google_blueprint(
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    scope=['openid','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/userinfo.profile'],
+    redirect_url='/google/callback'
+)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+app.register_blueprint(google_bp, url_prefix='/login')
 
 # ── MODELOS ──────────────────────────────────────────────────
 
@@ -396,6 +408,46 @@ def perfil():
     return render_template('perfil.html', usuario=current_user, pedidos=pedidos_data)
 
 # ── GOOGLE OAUTH ─────────────────────────────────────────────
+
+@app.route('/google/callback')
+def google_callback():
+    if not google.authorized:
+        return redirect(url_for('google.login'))
+    try:
+        resp = google.get('/oauth2/v2/userinfo')
+        if not resp.ok:
+            return redirect(url_for('login'))
+        info      = resp.json()
+        google_id = info.get('id')
+        email     = info.get('email', '')
+        nombre    = info.get('given_name', info.get('name', 'Usuario').split()[0])
+        apellido  = info.get('family_name', '')
+
+        usuario = Usuario.query.filter_by(google_id=google_id).first()
+        if not usuario:
+            usuario = Usuario.query.filter_by(email=email).first()
+            if usuario:
+                usuario.google_id = google_id
+                db.session.commit()
+            else:
+                username = email.split('@')[0] + '_' + ''.join(random.choices(string.digits, k=4))
+                while Usuario.query.filter_by(username=username).first():
+                    username = email.split('@')[0] + '_' + ''.join(random.choices(string.digits, k=4))
+                usuario = Usuario(
+                    nombre=nombre, apellido=apellido,
+                    username=username, telefono='',
+                    email=email, google_id=google_id,
+                    password_hash=generate_password_hash(os.urandom(24).hex())
+                )
+                db.session.add(usuario)
+                db.session.commit()
+        login_user(usuario, remember=True)
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        print(f'Google OAuth error: {e}')
+        return redirect(url_for('login'))
+
+# ── GOOGLE OAUTH CALLBACK ────────────────────────────────────
 
 @app.route('/google/callback')
 def google_callback():
