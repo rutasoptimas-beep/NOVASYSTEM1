@@ -13,8 +13,8 @@ DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///novasystem.db')
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
@@ -22,7 +22,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 
-# ───────────────────────── MODELOS ─────────────────────────
+# ───────────────── MODELOS ─────────────────
 
 class Usuario(UserMixin, db.Model):
     __tablename__ = "usuarios"
@@ -67,26 +67,13 @@ def load_user(uid):
     return Usuario.query.get(int(uid))
 
 
-# ───────────────────── PRODUCTOS ─────────────────────
+# ─────────────── PRODUCTOS ───────────────
 
 PRODUCTOS = {
-    "abrigos": [
-        {"id":1,"nombre":"Abrigo Camel Oversize","precio":2890,"tallas":["XS","S","M","L","XL"],"img":"https://images.unsplash.com/photo-1548712049-e4e9f4b0c8b9?w=600&q=80&fit=crop","categoria":"abrigos"},
-        {"id":2,"nombre":"Trench Coat Beige","precio":3200,"tallas":["S","M","L"],"img":"https://images.unsplash.com/photo-1544923246-77307dd654cb?w=600&q=80&fit=crop","categoria":"abrigos"},
-    ],
-
-    "sueteres": [
-        {"id":21,"nombre":"Suéter Trenzado Crema","precio":890,"tallas":["XS","S","M","L"],"img":"https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80&fit=crop","categoria":"sueteres"},
-        {"id":22,"nombre":"Sweater Oversized Gris","precio":750,"tallas":["S","M","L","XL"],"img":"https://images.unsplash.com/photo-1614676471928-2ed0ad1061a4?w=600&q=80&fit=crop","categoria":"sueteres"},
-    ],
-
-    "chamarras":[
-        {"id":41,"nombre":"Puffer Jacket Negro","precio":1890,"tallas":["XS","S","M","L","XL"],"img":"https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=600&q=80&fit=crop","categoria":"chamarras"},
-    ],
-
-    "accesorios":[
-        {"id":61,"nombre":"Bufanda Lana Crema","precio":480,"tallas":["Única"],"img":"https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=600&q=80&fit=crop","categoria":"accesorios"},
-    ]
+    "abrigos": [],
+    "sueteres": [],
+    "chamarras": [],
+    "accesorios": []
 }
 
 TODOS = [p for cat in PRODUCTOS.values() for p in cat]
@@ -100,69 +87,80 @@ def gen_folio():
     return "NT-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
 
-# ───────────────────── LOGIN ─────────────────────
+# ───────────── LOGIN ─────────────
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
 
     if current_user.is_authenticated:
         return redirect(url_for("inicio"))
 
-    error=None
+    error = None
 
-    if request.method=="POST":
+    if request.method == "POST":
 
-        username=request.form.get("username","").strip()
-        password=request.form.get("password","").strip()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
         if not username or not password:
-            error="Completa todos los campos"
+            error = "Completa todos los campos"
 
         else:
-            u=Usuario.query.filter_by(username=username).first()
+            u = Usuario.query.filter_by(username=username).first()
 
             if u and u.check_password(password):
                 login_user(u, remember=True)
                 return redirect(url_for("inicio"))
 
             else:
-                error="Usuario o contraseña incorrectos"
+                error = "Usuario o contraseña incorrectos"
 
-    return render_template("login.html",error=error)
+    return render_template("login.html", error=error)
 
 
-# ───────────────────── REGISTRO ─────────────────────
+# ───────────── REGISTRO (ARREGLADO) ─────────────
 
-@app.route("/registro",methods=["GET","POST"])
+@app.route("/registro", methods=["GET", "POST"])
 def registro():
 
     if current_user.is_authenticated:
         return redirect(url_for("inicio"))
 
-    error=None
+    error = None
+    campos = {}
 
-    if request.method=="POST":
+    if request.method == "POST":
 
-        nombre=request.form.get("nombre","").strip()
-        apellido=request.form.get("apellido","").strip()
-        username=request.form.get("username","").strip()
-        password=request.form.get("password","").strip()
-        telefono=request.form.get("telefono","").strip()
+        nombre = request.form.get("nombre", "").strip()
+        apellido = request.form.get("apellido", "").strip()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        telefono = request.form.get("telefono", "").strip()
 
-        if not all([nombre,apellido,username,password,telefono]):
-            error="Todos los campos son obligatorios"
+        campos = {
+            "nombre": nombre,
+            "apellido": apellido,
+            "username": username,
+            "telefono": telefono
+        }
 
-        elif len(username)<4:
-            error="Usuario muy corto"
+        if not all([nombre, apellido, username, password, telefono]):
+            error = "Todos los campos son obligatorios"
 
-        elif len(password)<6:
-            error="Contraseña muy corta"
+        elif len(username) < 4:
+            error = "El usuario debe tener al menos 4 caracteres"
+
+        elif len(password) < 6:
+            error = "La contraseña debe tener al menos 6 caracteres"
+
+        elif not re.match(r'^\+?[\d\s\-]{7,15}$', telefono):
+            error = "Número de teléfono inválido"
 
         elif Usuario.query.filter_by(username=username).first():
-            error="Ese usuario ya existe"
+            error = "Ese nombre de usuario ya está en uso"
 
         else:
-            u=Usuario(nombre=nombre,apellido=apellido,username=username,telefono=telefono)
+            u = Usuario(nombre=nombre, apellido=apellido, username=username, telefono=telefono)
             u.set_password(password)
 
             db.session.add(u)
@@ -170,16 +168,16 @@ def registro():
 
             return redirect(url_for("login"))
 
-    return render_template("registro.html",error=error)
+    return render_template("registro.html", error=error, campos=campos)
 
 
-# ───────────────────── INICIO ─────────────────────
+# ───────────── INICIO ─────────────
 
 @app.route("/inicio")
 @login_required
 def inicio():
 
-    destacados=TODOS[:4]
+    destacados = TODOS[:8]
 
     return render_template(
         "index.html",
@@ -189,88 +187,40 @@ def inicio():
     )
 
 
-# ───────────────────── CATALOGO ─────────────────────
-
-@app.route("/catalogo")
-@login_required
-def catalogo():
-
-    categoria=request.args.get("cat","todos")
-    buscar=request.args.get("q","").lower()
-
-    if categoria=="todos":
-        prods=TODOS
-    else:
-        prods=PRODUCTOS.get(categoria,[])
-
-    if buscar:
-        prods=[p for p in prods if buscar in p["nombre"].lower()]
-
-    return render_template(
-        "catalogo.html",
-        usuario=current_user,
-        productos=prods,
-        categoria=categoria,
-        buscar=buscar
-    )
-
-
-# ───────────────────── PRODUCTO ─────────────────────
-
-@app.route("/producto/<int:pid>")
-@login_required
-def producto(pid):
-
-    p=get_producto(pid)
-
-    if not p:
-        return redirect(url_for("catalogo"))
-
-    relacionados=[x for x in PRODUCTOS.get(p["categoria"],[]) if x["id"]!=pid][:4]
-
-    return render_template(
-        "producto.html",
-        usuario=current_user,
-        producto=p,
-        relacionados=relacionados
-    )
-
-
-# ───────────────────── LOGOUT ─────────────────────
+# ───────────── LOGOUT ─────────────
 
 @app.route("/logout")
 @login_required
 def logout():
 
     logout_user()
-
     return redirect(url_for("login"))
 
 
-# ───────────────────── API CARRITO ─────────────────────
+# ───────────── API CARRITO ─────────────
 
 @app.route("/api/carrito/count")
 @login_required
 def cart_count():
 
-    cart=session.get("carrito",{})
+    cart = session.get("carrito", {})
 
     return jsonify({
-        "count":sum(i["qty"] for i in cart.values())
+        "count": sum(i["qty"] for i in cart.values())
     })
 
 
-# ───────────────────── DB INIT ─────────────────────
+# ───────────── INIT DB ─────────────
 
 with app.app_context():
     db.create_all()
 
 
-# ───────────────────── RUN ─────────────────────
+# ───────────── RUN ─────────────
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
-    port=int(os.environ.get("PORT",5000))
+    port = int(os.environ.get("PORT", 5000))
 
     app.run(
         host="0.0.0.0",
