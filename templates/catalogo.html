@@ -21,6 +21,7 @@
 @media(max-width:1024px){.catalog-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:768px){.cat-hero{padding:36px 20px 24px;}.catalog-body{padding:28px 20px;}.catalog-grid{grid-template-columns:repeat(2,1fr);gap:14px;}.search-box input{width:140px;}.filters{gap:8px;}}
 @media(max-width:480px){.catalog-grid{grid-template-columns:repeat(2,1fr);gap:10px;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 </style>
 {% endblock %}
 
@@ -130,6 +131,5 @@ function closeQA(){document.getElementById('qaModal').style.display='none';}
 function changeQty(d){qaQtyVal=Math.max(1,qaQtyVal+d);document.getElementById('qaQty').textContent=qaQtyVal;}
 function confirmQA(){if(qaPid&&qaTalla){addToCart(qaPid,qaTalla,qaQtyVal);closeQA();}}
 document.getElementById('qaModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeQA();});
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 </script>
 {% endblock %}
