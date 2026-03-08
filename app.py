@@ -2,8 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import os, re, json, random, string
+from datetime import datetime, timedelta
+import os, re, json, random, string, requests
+
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', 're_VcRUYJJY_PiULgbyQaku6v1yjfubpdFFK')
+RESEND_FROM    = 'onboarding@resend.dev'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'neonthread-secret-2025')
@@ -28,7 +31,11 @@ class Usuario(UserMixin, db.Model):
     apellido      = db.Column(db.String(80),  nullable=False)
     username      = db.Column(db.String(50),  unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    telefono      = db.Column(db.String(20),  nullable=False)
+    telefono      = db.Column(db.String(20),  nullable=True)
+    google_id     = db.Column(db.String(100), nullable=True, unique=True)
+    email         = db.Column(db.String(120), nullable=True)
+    reset_token   = db.Column(db.String(6),   nullable=True)
+    reset_expira  = db.Column(db.DateTime,    nullable=True)
     creado_en     = db.Column(db.DateTime,    default=datetime.utcnow)
     pedidos       = db.relationship('Pedido', backref='usuario', lazy=True)
 
@@ -185,8 +192,9 @@ def registro():
         username = request.form.get('username','').strip()
         password = request.form.get('password','').strip()
         telefono = request.form.get('telefono','').strip()
-        campos = {'nombre': nombre, 'apellido': apellido, 'username': username, 'telefono': telefono}
-        if not all([nombre, apellido, username, password, telefono]):
+        email    = request.form.get('email','').strip().lower()
+        campos = {'nombre': nombre, 'apellido': apellido, 'username': username, 'telefono': telefono, 'email': email}
+        if not all([nombre, apellido, username, password, telefono, email]):
             error = 'Todos los campos son obligatorios'
         elif len(username) < 4:
             error = 'El usuario debe tener al menos 4 caracteres'
@@ -194,10 +202,14 @@ def registro():
             error = 'La contraseña debe tener al menos 6 caracteres'
         elif not re.match(r'^\+?[\d\s\-]{7,15}$', telefono):
             error = 'Número de teléfono inválido'
+        elif not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+            error = 'Correo electrónico inválido'
         elif Usuario.query.filter_by(username=username).first():
             error = 'Ese nombre de usuario ya está en uso'
+        elif Usuario.query.filter_by(email=email).first():
+            error = 'Ese correo ya está registrado'
         else:
-            u = Usuario(nombre=nombre, apellido=apellido, username=username, telefono=telefono)
+            u = Usuario(nombre=nombre, apellido=apellido, username=username, telefono=telefono, email=email)
             u.set_password(password)
             db.session.add(u)
             db.session.commit()
@@ -382,6 +394,133 @@ def perfil():
             'productos': json.loads(p.items_json)
         })
     return render_template('perfil.html', usuario=current_user, pedidos=pedidos_data)
+
+# ── GOOGLE OAUTH ─────────────────────────────────────────────
+
+@app.route('/google/callback')
+def google_callback():
+    if not google.authorized:
+        return redirect(url_for('google.login'))
+    try:
+        resp = google.get('/oauth2/v2/userinfo')
+        if not resp.ok:
+            return redirect(url_for('login'))
+        info      = resp.json()
+        google_id = info.get('id')
+        email     = info.get('email', '')
+        nombre    = info.get('given_name', info.get('name', 'Usuario').split()[0])
+        apellido  = info.get('family_name', '')
+
+        usuario = Usuario.query.filter_by(google_id=google_id).first()
+        if not usuario:
+            usuario = Usuario.query.filter_by(email=email).first()
+            if usuario:
+                usuario.google_id = google_id
+                db.session.commit()
+            else:
+                username = email.split('@')[0] + '_' + ''.join(random.choices(string.digits, k=4))
+                while Usuario.query.filter_by(username=username).first():
+                    username = email.split('@')[0] + '_' + ''.join(random.choices(string.digits, k=4))
+                usuario = Usuario(
+                    nombre=nombre, apellido=apellido,
+                    username=username, telefono='',
+                    email=email, google_id=google_id,
+                    password_hash=generate_password_hash(os.urandom(24).hex())
+                )
+                db.session.add(usuario)
+                db.session.commit()
+        login_user(usuario, remember=True)
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        print(f'Google OAuth error: {e}')
+        return redirect(url_for('login'))
+
+# ── RECUPERAR CONTRASEÑA ─────────────────────────────────────
+
+def enviar_codigo_resend(email_destino, codigo, nombre):
+    try:
+        resp = requests.post(
+            'https://api.resend.com/emails',
+            headers={'Authorization': f'Bearer {RESEND_API_KEY}', 'Content-Type': 'application/json'},
+            json={
+                'from': RESEND_FROM,
+                'to': [email_destino],
+                'subject': 'Código de recuperación — NEON THREAD',
+                'html': f'''
+                <div style="font-family:Montserrat,sans-serif;max-width:480px;margin:auto;background:#f0ebe3;padding:40px;">
+                  <h2 style="font-family:'Playfair Display',serif;color:#1a1612;margin-bottom:8px;">NEON THREAD</h2>
+                  <p style="color:#6b5f52;font-size:13px;">Hola {nombre}, recibimos una solicitud para restablecer tu contraseña.</p>
+                  <div style="background:#1a1612;color:#f0ebe3;font-size:36px;font-weight:700;letter-spacing:12px;text-align:center;padding:28px;margin:24px 0;">{codigo}</div>
+                  <p style="color:#6b5f52;font-size:11px;">Este código expira en 15 minutos. Si no solicitaste esto, ignora este mensaje.</p>
+                </div>'''
+            }
+        )
+        return resp.status_code == 200
+    except Exception as e:
+        print(f'Error Resend: {e}')
+        return False
+
+@app.route('/recuperar', methods=['GET', 'POST'])
+def recuperar():
+    error = None
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        usuario = Usuario.query.filter_by(email=email).first()
+        if not usuario:
+            error = 'No encontramos una cuenta con ese correo.'
+        else:
+            codigo = ''.join(random.choices(string.digits, k=6))
+            usuario.reset_token  = codigo
+            usuario.reset_expira = datetime.utcnow() + timedelta(minutes=15)
+            db.session.commit()
+            if enviar_codigo_resend(email, codigo, usuario.nombre):
+                session['reset_email'] = email
+                return redirect(url_for('verificar_codigo'))
+            else:
+                error = 'Error al enviar el correo. Intenta de nuevo.'
+    return render_template('recuperar.html', error=error)
+
+@app.route('/verificar-codigo', methods=['GET', 'POST'])
+def verificar_codigo():
+    error = None
+    email = session.get('reset_email')
+    if not email:
+        return redirect(url_for('recuperar'))
+    if request.method == 'POST':
+        codigo = request.form.get('codigo', '').strip()
+        usuario = Usuario.query.filter_by(email=email).first()
+        if not usuario or usuario.reset_token != codigo:
+            error = 'Código incorrecto.'
+        elif datetime.utcnow() > usuario.reset_expira:
+            error = 'El código expiró. Solicita uno nuevo.'
+        else:
+            session['reset_verificado'] = True
+            return redirect(url_for('nueva_contrasena'))
+    return render_template('verificar_codigo.html', error=error)
+
+@app.route('/nueva-contrasena', methods=['GET', 'POST'])
+def nueva_contrasena():
+    error = None
+    email = session.get('reset_email')
+    if not email or not session.get('reset_verificado'):
+        return redirect(url_for('recuperar'))
+    if request.method == 'POST':
+        nueva = request.form.get('password', '')
+        confirma = request.form.get('confirma', '')
+        if len(nueva) < 6:
+            error = 'La contraseña debe tener al menos 6 caracteres.'
+        elif nueva != confirma:
+            error = 'Las contraseñas no coinciden.'
+        else:
+            usuario = Usuario.query.filter_by(email=email).first()
+            usuario.set_password(nueva)
+            usuario.reset_token  = None
+            usuario.reset_expira = None
+            db.session.commit()
+            session.pop('reset_email', None)
+            session.pop('reset_verificado', None)
+            return redirect(url_for('login'))
+    return render_template('nueva_contrasena.html', error=error)
 
 @app.route('/logout')
 @login_required
