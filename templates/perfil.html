@@ -103,7 +103,7 @@
           </div>
           <div style="text-align:center;">
             <div class="order-status"><div class="order-status-dot"></div>Confirmado</div>
-            <div style="font-size:9px;letter-spacing:1px;color:var(--tan);margin-top:2px;">{{ p.items|length }} artículo{% if p.items|length != 1 %}s{% endif %}</div>
+            <div style="font-size:9px;letter-spacing:1px;color:var(--tan);margin-top:2px;">{{ p.productos|length }} artículo{% if p.productos|length != 1 %}s{% endif %}</div>
           </div>
           <div style="text-align:right;">
             <div class="order-total">${{ "{:,.0f}".format(p.total) }}</div>
@@ -111,7 +111,7 @@
           </div>
         </div>
         <div class="order-body" id="order{{loop.index}}">
-          {% for item in p.items %}
+          {% for item in p.productos %}
           <div class="order-item-row">
             <span><strong>{{ item.nombre }}</strong> — Talla {{ item.talla }}</span>
             <span>{{ item.qty }} × ${{ "{:,.0f}".format(item.precio) }} = <strong>${{ "{:,.0f}".format(item.subtotal) }}</strong></span>
