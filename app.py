@@ -198,7 +198,7 @@ def registro():
             db.session.add(u)
             db.session.commit()
             return redirect(url_for('login'))
-        return render_template('registro.html', error=error, campos={})
+    return render_template('registro.html', error=error, campos={})
 
 @app.route('/inicio')
 @login_required
