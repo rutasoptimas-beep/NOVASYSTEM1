@@ -535,6 +535,19 @@ def cart_count():
     cart = session.get('carrito', {})
     return jsonify({'count': sum(i['qty'] for i in cart.values())})
 
+@app.route('/setup-db-columns')
+def setup_db_columns():
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS google_id VARCHAR(100) UNIQUE'))
+            conn.execute(db.text('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email VARCHAR(120)'))
+            conn.execute(db.text('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS reset_token VARCHAR(6)'))
+            conn.execute(db.text('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS reset_expira TIMESTAMP'))
+            conn.commit()
+        return 'OK - columnas agregadas'
+    except Exception as e:
+        return f'Error: {e}'
+
 with app.app_context():
     db.create_all()
 
